@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Portal | Vision for a Better Life</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS is unchanged... */
+        :root { --primary: #3498db; --secondary: #2c3e50; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #ecf0f1; --dark: #34495e; --gray: #95a5a6; --church-green: #27ae60; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #333; line-height: 1.6; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .auth-container { background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); overflow: hidden; width: 100%; max-width: 450px; margin: 0 auto; }
+        .auth-header { background: var(--church-green); color: white; padding: 30px 20px; text-align: center; }
+        .auth-header h1 { font-size: 1.8rem; margin-bottom: 10px; }
+        .auth-header p { opacity: 0.9; }
+        .auth-logo { width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+        .auth-logo img { width: 60px; height: 60px; object-fit: contain; }
+        .auth-body { padding: 30px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark); }
+        .form-control { width: 100%; padding: 14px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: all 0.3s ease; }
+        .form-control:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
+        .btn { padding: 14px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; font-size: 1rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+        .btn:active { transform: translateY(0); }
+        .form-footer { text-align: center; margin-top: 20px; color: var(--gray); font-size: 0.9rem; }
+        .form-footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .form-footer a:hover { text-decoration: underline; }
+        .otp-container { display: none; }
+        .otp-inputs { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+        .otp-input { width: 50px; height: 50px; text-align: center; font-size: 1.5rem; border: 2px solid #ddd; border-radius: 8px; outline: none; }
+        .otp-input:focus { border-color: var(--primary); }
+        .resend-otp { text-align: center; margin-top: 15px; }
+        .resend-otp a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .resend-otp a:hover { text-decoration: underline; }
+        .dashboard { display: none; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); overflow: hidden; width: 100%; max-width: 900px; margin: 0 auto; }
+        .dashboard-header { background: var(--church-green); color: white; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-avatar { width: 60px; height: 60px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--church-green); }
+        .user-details h2 { font-size: 1.5rem; margin-bottom: 5px; }
+        .user-details p { opacity: 0.9; font-size: 0.9rem; }
+        .logout-btn { background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; }
+        .logout-btn:hover { background: rgba(255, 255, 255, 0.3); }
+        .dashboard-body { padding: 30px; }
+        .balance-card { background: linear-gradient(135deg, var(--primary) 0%, #2980b9 100%); border-radius: 15px; padding: 30px; color: white; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3); }
+        .balance-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .balance-title { font-size: 1.2rem; opacity: 0.9; }
+        .balance-amount { font-size: 2.5rem; font-weight: 700; margin: 10px 0; }
+        .balance-footer { display: flex; justify-content: space-between; opacity: 0.9; font-size: 0.9rem; }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 600; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); z-index: 1000; transform: translateX(200%); transition: transform 0.3s ease; }
+        .notification.show { transform: translateX(0); }
+        .notification-success { background: var(--success); }
+        .notification-error { background: var(--danger); }
+        .notification-warning { background: var(--warning); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Page -->
+        <div class="auth-container" id="loginPage">
+            <div class="auth-header">
+                <div class="auth-logo"><img src="images/logo.png" alt="Church Logo"></div>
+                <h1>Vision for a Better Life</h1>
+                <p>Member Savings Portal</p>
+            </div>
+            <div class="auth-body">
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" class="form-control" placeholder="e.g., +251911330471">
+                </div>
+                <button class="btn btn-primary" id="sendOtpBtn"><i class="fas fa-paper-plane"></i> Send Verification Code</button>
+                <div class="otp-container" id="otpContainer">
+                    <div class="form-group">
+                        <label>Enter Verification Code (Hint: 123456)</label>
+                        <div class="otp-inputs">
+                            <input type="text" class="otp-input" maxlength="1" data-index="0"><input type="text" class="otp-input" maxlength="1" data-index="1"><input type="text" class="otp-input" maxlength="1" data-index="2"><input type="text" class="otp-input" maxlength="1" data-index="3"><input type="text" class="otp-input" maxlength="1" data-index="4"><input type="text" class="otp-input" maxlength="1" data-index="5">
+                        </div>
+                    </div>
+                    <button class="btn btn-success" id="verifyOtpBtn"><i class="fas fa-lock-open"></i> Verify & Login</button>
+                    <div class="resend-otp"><a href="#" id="resendOtpLink">Resend Code</a></div>
+                </div>
+                <!-- Test accounts div has been removed -->
+                <div class="form-footer">
+                    <p>Having trouble? <a href="#">Contact Support</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dashboard Page -->
+        <div class="dashboard" id="dashboardPage">
+            <div class="dashboard-header">
+                <div class="user-info">
+                    <div class="user-avatar"><i class="fas fa-user"></i></div>
+                    <div class="user-details">
+                        <h2 id="userName">Member Name</h2>
+                        <p>Member ID: <span id="userId">M000</span></p>
+                        <p>Phone: <span id="userPhone">+251...</span></p>
+                    </div>
+                </div>
+                <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+            <div class="dashboard-body">
+                <div class="balance-card">
+                    <div class="balance-header">
+                        <div class="balance-title">Total Savings Balance</div>
+                        <i class="fas fa-wallet fa-2x"></i>
+                    </div>
+                    <div class="balance-amount" id="accountBalance">ETB 0.00</div>
+                    <div class="balance-footer">
+                        <div>Last Entry Date: <span id="lastUpdated">N/A</span></div>
+                        <div>Account Type: <span id="accountType">Regular Savings</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // DOM Elements
+        const loginPage = document.getElementById('loginPage');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const otpContainer = document.getElementById('otpContainer');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const resendOtpLink = document.getElementById('resendOtpLink');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const notification = document.getElementById('notification');
+        const otpInputs = document.querySelectorAll('.otp-input');
+        
+        // Dashboard elements
+        const userName = document.getElementById('userName');
+        const userId = document.getElementById('userId');
+        const userPhone = document.getElementById('userPhone');
+        const accountBalance = document.getElementById('accountBalance');
+        const lastUpdated = document.getElementById('lastUpdated');
+        const accountType = document.getElementById('accountType');
+        
+        // Current user data
+        let currentUser = null;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            setupOtpInputs();
+        });
+        
+        function setupEventListeners() {
+            sendOtpBtn.addEventListener('click', sendOtp);
+            verifyOtpBtn.addEventListener('click', verifyOtp);
+            resendOtpLink.addEventListener('click', resendOtp);
+            logoutBtn.addEventListener('click', logout);
+        }
+        
+        function setupOtpInputs() {
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', function() {
+                    if (this.value.length === 1 && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                });
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+        
+        // --- NEW AND UPDATED FUNCTIONS ---
+
+        // NEW FUNCTION: Get member data from localStorage
+        function getMemberByPhone(phone) {
+            const membersData = localStorage.getItem('churchMembersData');
+            if (!membersData) {
+                return null; // No data exists
+            }
+            const members = JSON.parse(membersData);
+            return members.find(member => member.phone === phone);
+        }
+
+        // UPDATED: sendOtp now uses real data
+        function sendOtp() {
+            const phoneNumber = phoneNumberInput.value.trim();
+            if (!phoneNumber) {
+                showNotification('Please enter your phone number', 'error');
+                return;
+            }
+            
+            // This can be simplified or kept for format validation
+            const phoneRegex = /^\+251\d{9}$/;
+            if (!phoneRegex.test(phoneNumber)) {
+                showNotification('Please use the format +251XXXXXXXXX', 'error');
+                return;
+            }
+            
+            // Check for member in localStorage
+            const member = getMemberByPhone(phoneNumber);
+            
+            if (!member) {
+                showNotification('No account found with this phone number.', 'error');
+                return;
+            }
+            
+            showNotification(`Verification code sent to ${phoneNumber}`, 'success');
+            otpContainer.style.display = 'block';
+            currentUser = member; // Store the found member object
+            otpInputs[0].focus();
+        }
+        
+        function verifyOtp() {
+            let otp = '';
+            otpInputs.forEach(input => { otp += input.value; });
+            
+            if (otp.length !== 6) {
+                showNotification('Please enter the 6-digit verification code', 'error');
+                return;
+            }
+            
+            // The OTP is still simulated for this demo
+            if (otp === '123456') {
+                showNotification('Login successful!', 'success');
+                showDashboard();
+            } else {
+                showNotification('Invalid verification code. Please try again.', 'error');
+                otpInputs.forEach(input => input.value = '');
+                otpInputs[0].focus();
+            }
+        }
+        
+        function resendOtp(e) {
+            e.preventDefault();
+            if (currentUser) {
+                showNotification(`Verification code resent to ${currentUser.phone}`, 'success');
+                otpInputs.forEach(input => input.value = '');
+                otpInputs[0].focus();
+            }
+        }
+        
+        // UPDATED: showDashboard now maps real data properties
+        function showDashboard() {
+            if (!currentUser) return;
+            
+            userName.textContent = currentUser.name;
+            userId.textContent = currentUser.id;
+            userPhone.textContent = currentUser.phone;
+            // Use 'totalSavings' from the member object
+            accountBalance.textContent = `ETB ${(currentUser.totalSavings || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            // Use 'date' from the member object
+            lastUpdated.textContent = currentUser.date; 
+            accountType.textContent = 'Regular Savings'; // This is a static value as it's not in the admin data
+            
+            loginPage.style.display = 'none';
+            dashboardPage.style.display = 'block';
+        }
+        
+        function logout() {
+            currentUser = null;
+            // Reset to login page instead of redirecting away
+            dashboardPage.style.display = 'none';
+            loginPage.style.display = 'block';
+            phoneNumberInput.value = '';
+            otpContainer.style.display = 'none';
+            otpInputs.forEach(input => input.value = '');
+            showNotification('You have been logged out', 'success');
+        }
+        
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification notification-${type} show`;
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
