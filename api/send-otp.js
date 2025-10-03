@@ -1,40 +1,40 @@
-// File: netlify/functions/send-otp.js
-
-exports.handler = async function(event, context) {
+// This is the correct Vercel-compatible version of the function.
+export default async function handler(request, response) {
     // Only allow POST requests
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
+    if (request.method !== 'POST') {
+        return response.status(405).json({ error: 'Method Not Allowed' });
     }
 
     try {
-        const { chatId, otp } = JSON.parse(event.body);
-        const botToken = process.env.TELEGRAM_BOT_TOKEN; // Securely get token from environment variables
+        // Vercel automatically parses the JSON body from the request
+        const { chatId, otp } = request.body;
+        const botToken = process.env.8357889193:AAHsYYveSew5tqN9k_-N2nkGeEDPx-0m7Cw; // Get the secret token
 
+        // Check if all required data is present
         if (!chatId || !otp || !botToken) {
-            return { statusCode: 400, body: 'Missing required parameters.' };
+            console.error("Missing required parameters:", { chatId: !!chatId, otp: !!otp, botToken: !!botToken });
+            return response.status(400).json({ error: 'Missing required parameters.' });
         }
         
         const message = `Your Vision for a Better Life verification code is: ${otp}`;
         const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
 
-        const response = await fetch(telegramUrl);
-        const data = await response.json();
+        // Use fetch to send the message to Telegram's API
+        const telegramResponse = await fetch(telegramUrl);
+        const data = await telegramResponse.json();
 
+        // If Telegram's API returns an error (e.g., "chat not found")
         if (!data.ok) {
-            // Telegram API returned an error
+            console.error("Telegram API Error:", data.description);
             throw new Error(data.description);
         }
 
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ message: 'OTP sent successfully!' })
-        };
+        // Send a success response back to the front-end (your index.html)
+        return response.status(200).json({ message: 'OTP sent successfully!' });
 
     } catch (error) {
-        console.error('Error sending OTP:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to send OTP.' })
-        };
+        // If anything in the 'try' block fails, this will run
+        console.error('Overall Error in send-otp function:', error);
+        return response.status(500).json({ error: 'Failed to send OTP.' });
     }
-};
+}
