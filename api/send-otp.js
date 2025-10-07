@@ -11,7 +11,8 @@ const users = [
   {
     name: "John Doe",
     phone: "+251911330471",
-    chatId: 123456789, // Replace with your Telegram chat ID
+    chatId: {"ok":true,"result":[{"update_id":60939528,
+"message":{"message_id":4,"from":{"id":1773592241,"is_bot":false,"first_name":"Nate","username":"Netan_el1","language_code":"en"},"chat":{"id":1773592241,"first_name":"Nate","username":"Netan_el1","type":"private"},"date":1759850143,"text":"gg"}}]}, // Replace with your Telegram chat ID
   },
 ];
 
