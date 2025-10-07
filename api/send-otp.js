@@ -3,7 +3,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 // Replace with your Telegram Bot Token
-const TELEGRAM_BOT_TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN';
+const TELEGRAM_BOT_TOKEN = '8357889193:AAEGYwkzPJx8wbrPDs5QIL9bhHN1v7duuso';
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN);
 
 // Dummy user database (replace with real DB or file)
