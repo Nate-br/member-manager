@@ -3,9 +3,9 @@ require('dotenv').config(); // Load environment variables
 const twilio = require('twilio');
 
 // Twilio configuration
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const accountSid = process.env.ACeade126fa4ba8222b4d16ae51877253d;
+const authToken = process.env.e52e7e294f239b496d215fde0bed96f8;
+const twilioPhoneNumber = process.env.+25112684868;
 
 // Initialize Twilio client
 const client = twilio(accountSid, authToken);
