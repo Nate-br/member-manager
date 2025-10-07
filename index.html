@@ -1,135 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Telegram Login</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <style>
-    /* Same as before — styles omitted for brevity */
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Portal | Vision for a Better Life</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --primary: #3498db; 
+            --secondary: #2c3e50; 
+            --success: #27ae60; 
+            --warning: #f39c12; 
+            --danger: #e74c3c; 
+            --light: #ecf0f1; 
+            --dark: #34495e; 
+            --gray: #95a5a6; 
+            --church-green: #27ae60; 
+        }
+        
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
+        body { 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px; 
+        }
+        
+        .auth-container { 
+            background: white; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); 
+            max-width: 450px; 
+            width: 100%; 
+        }
+        
+        .auth-header { 
+            background: var(--church-green); 
+            color: white; 
+            padding: 30px 20px; 
+            text-align: center; 
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .auth-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+        
+        .auth-header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .auth-body { 
+            padding: 30px; 
+        }
+        
+        .form-group { 
+            margin-bottom: 20px; 
+        }
+        
+        .form-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: var(--dark);
+        }
+        
+        .form-control { 
+            width: 100%; 
+            padding: 14px 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .btn { 
+            padding: 14px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            width: 100%; 
+            font-size: 1rem; 
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary { 
+            background: var(--primary); 
+            color: white; 
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-success { 
+            background: var(--success); 
+            color: white; 
+        }
+        
+        .btn-success:hover {
+            background: #219a52;
+            transform: translateY(-1px);
+        }
+        
+        .btn:disabled { 
+            background-color: var(--gray); 
+            cursor: not-allowed; 
+            transform: none;
+        }
+        
+        .otp-container { 
+            display: none; 
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #eee;
+        }
+        
+        .otp-inputs { 
+            display: flex; 
+            gap: 10px; 
+            justify-content: center; 
+            margin: 20px 0; 
+        }
+        
+        .otp-input { 
+            width: 50px; 
+            height: 50px; 
+            text-align: center; 
+            font-size: 1.5rem; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-weight: bold;
+            transition: border-color 0.3s ease;
+        }
+        
+        .otp-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .notification { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            padding: 15px 25px; 
+            border-radius: 8px; 
+            color: white; 
+            font-weight: 600; 
+            z-index: 1000; 
+            transform: translateX(120%); 
+            transition: transform 0.3s ease; 
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .notification.show { 
+            transform: translateX(0); 
+        }
+        
+        .notification-success { 
+            background: var(--success); 
+        } 
+        
+        .notification-error { 
+            background: var(--danger); 
+        } 
+        
+        .notification-warning { 
+            background: var(--warning); 
+        }
+        
+        .spinner { 
+            display: none; 
+        }
+        
+        .spinner.show {
+            display: inline-block;
+        }
+        
+        .btn-text.hide {
+            display: none;
+        }
+        
+        @media (max-width: 480px) {
+            .auth-container {
+                margin: 10px;
+                max-width: 100%;
+            }
+            
+            .otp-input {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .notification {
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+                transform: translateY(-120%);
+            }
+            
+            .notification.show {
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="auth-container">
-    <h2>Vision for a Better Life</h2>
-    <p>Member Savings Portal</p>
-
-    <div class="form-group">
-      <label for="phoneNumber">Phone Number</label>
-      <input type="tel" id="phoneNumber" class="form-control" placeholder="+251911330471" />
-    </div>
-
-    <button class="btn" id="sendOtpBtn">
-      <span class="btn-text"><i class="fas fa-paper-plane"></i> Send Verification Code</span>
-      <span class="spinner"><i class="fas fa-spinner fa-spin"></i></span>
-    </button>
-
-    <div class="otp-container" id="otpContainer">
-      <div class="form-group">
-        <label>Enter Verification Code from Telegram</label>
-        <div class="otp-inputs">
-          <input type="text" class="otp-input" maxlength="1">
-          <input type="text" class="otp-input" maxlength="1">
-          <input type="text" class="otp-input" maxlength="1">
-          <input type="text" class="otp-input" maxlength="1">
-          <input type="text" class="otp-input" maxlength="1">
-          <input type="text" class="otp-input" maxlength="1">
+    <div class="container">
+        <!-- Login Page -->
+        <div class="auth-container" id="loginPage">
+            <div class="auth-header">
+                <h1>Vision for a Better Life</h1>
+                <p>Member Savings Portal</p>
+            </div>
+            <div class="auth-body">
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <input type="tel" id="phoneNumber" class="form-control" placeholder="e.g., +251911111111">
+                </div>
+                <button class="btn btn-primary" id="sendOtpBtn">
+                    <span class="btn-text"><i class="fas fa-paper-plane"></i> Send Verification Code</span>
+                    <span class="spinner"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+                
+                <div class="otp-container" id="otpContainer">
+                    <div class="form-group">
+                        <label>Enter Verification Code from Telegram</label>
+                        <div class="otp-inputs">
+                            <input type="text" class="otp-input" maxlength="1">
+                            <input type="text" class="otp-input" maxlength="1">
+                            <input type="text" class="otp-input" maxlength="1">
+                            <input type="text" class="otp-input" maxlength="1">
+                            <input type="text" class="otp-input" maxlength="1">
+                            <input type="text" class="otp-input" maxlength="1">
+                        </div>
+                    </div>
+                    <button class="btn btn-success" id="verifyOtpBtn">
+                        <i class="fas fa-lock-open"></i> Verify & Login
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
-      <button class="btn" id="verifyOtpBtn"><i class="fas fa-lock-open"></i> Verify & Login</button>
     </div>
-  </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const otpContainer = document.getElementById('otpContainer');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const sendOtpBtnText = document.querySelector('#sendOtpBtn .btn-text');
+        const sendOtpBtnSpinner = document.querySelector('#sendOtpBtn .spinner');
+        const notification = document.getElementById('notification');
 
-  <div class="notification" id="notification"></div>
+        let currentUser = null;
+        let sentOtp = null;
 
-  <script>
-    const phoneNumberInput = document.getElementById('phoneNumber');
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    const otpContainer = document.getElementById('otpContainer');
-    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-    const otpInputs = document.querySelectorAll('.otp-input');
-    const sendOtpBtnText = document.querySelector('.btn-text');
-    const sendOtpBtnSpinner = document.querySelector('.spinner');
-    const notification = document.getElementById('notification');
-
-    let currentUser = null;
-    let sentOtp = null;
-
-    document.addEventListener('DOMContentLoaded', () => {
-      sendOtpBtn.addEventListener('click', sendOtp);
-      verifyOtpBtn.addEventListener('click', verifyOtp);
-    });
-
-    otpInputs.forEach((input, idx) => {
-      input.addEventListener('input', () => {
-        if (input.value.length === 1 && idx < otpInputs.length - 1) {
-          otpInputs[idx + 1].focus();
-        }
-      });
-    });
-
-    async function sendOtp() {
-      const phone = phoneNumberInput.value.trim();
-      if (!phone) return showNotification("Enter phone number", "error");
-
-      sendOtpBtn.disabled = true;
-      sendOtpBtnText.style.display = 'none';
-      sendOtpBtnSpinner.style.display = 'inline-block';
-
-      try {
-        const res = await fetch('/api/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, action: 'request-login' }),
+        document.addEventListener('DOMContentLoaded', () => {
+            sendOtpBtn.addEventListener('click', sendOtp);
+            verifyOtpBtn.addEventListener('click', verifyOtp);
+            setupOtpInputs();
         });
 
-        const data = await res.json();
-        if (!data.success) return showNotification(data.message || "Phone not found", "error");
+        function setupOtpInputs() {
+            otpInputs.forEach((input, idx) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && idx < otpInputs.length - 1) {
+                        otpInputs[idx + 1].focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '' && idx > 0) {
+                        otpInputs[idx - 1].focus();
+                    }
+                });
+            });
+        }
 
-        currentUser = data.user;
-        sentOtp = data.otp;
+        async function sendOtp() {
+            const phone = phoneNumberInput.value.trim();
+            if (!phone) return showNotification("Please enter your phone number", "error");
 
-        showNotification("Verification code sent via Telegram", "success");
-        otpContainer.style.display = 'block';
-      } catch (err) {
-        console.error(err);
-        showNotification("Failed to send OTP", "error");
-        sentOtp = null;
-        currentUser = null;
-      } finally {
-        sendOtpBtn.disabled = false;
-        sendOtpBtnText.style.display = 'inline-flex';
-        sendOtpBtnSpinner.style.display = 'none';
-      }
-    }
+            sendOtpBtn.disabled = true;
+            sendOtpBtnText.classList.add('hide');
+            sendOtpBtnSpinner.classList.add('show');
 
-    async function verifyOtp() {
-      const enteredOtp = Array.from(otpInputs).map(input => input.value).join('');
-      if (enteredOtp.length !== 6) return showNotification("Enter the 6-digit code", "error");
+            try {
+                const res = await fetch('/api/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, action: 'request-login' }),
+                });
 
-      const res = await fetch('/api/send-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp: enteredOtp, action: 'verify' }),
-      });
+                const data = await res.json();
+                if (!data.success) {
+                    return showNotification(data.message || "Phone not found", "error");
+                }
 
-      const data = await res.json();
-      if (data.success) {
-        showNotification("Login successful!", "success");
-        alert("Welcome, " + data.user.name);
-        // Redirect to member-manager.html or dashboard
-      } else {
-        showNotification("Invalid verification code.", "error");
-      }
-    }
+                currentUser = data.user;
+                sentOtp = data.otp;
 
-    function showNotification(message, type) {
-      notification.textContent = message;
-      notification.className = `notification notification-${type} show`;
-      setTimeout(() => {
-        notification.classList.remove('show');
-      }, 3000);
-    }
-  </script>
+                showNotification("Verification code sent via Telegram", "success");
+                otpContainer.style.display = 'block';
+                otpInputs[0].focus();
+                
+            } catch (err) {
+                console.error(err);
+                showNotification("Failed to send OTP. Please try again.", "error");
+                sentOtp = null;
+                currentUser = null;
+            } finally {
+                sendOtpBtn.disabled = false;
+                sendOtpBtnText.classList.remove('hide');
+                sendOtpBtnSpinner.classList.remove('show');
+            }
+        }
+
+        async function verifyOtp() {
+            const enteredOtp = Array.from(otpInputs).map(input => input.value).join('');
+            if (enteredOtp.length !== 6) {
+                return showNotification("Please enter the complete 6-digit code", "error");
+            }
+
+            try {
+                const res = await fetch('/api/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp: enteredOtp, action: 'verify' }),
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showNotification("Login successful!", "success");
+                    setTimeout(() => {
+                        window.location.href = 'member-manager.html';
+                    }, 1500);
+                } else {
+                    showNotification("Invalid verification code", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showNotification("Verification failed. Please try again.", "error");
+            }
+        }
+
+        function showNotification(message, type) {
+            notification.textContent = message;
+            notification.className = `notification notification-${type} show`;
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
