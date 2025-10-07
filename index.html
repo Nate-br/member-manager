@@ -1,519 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Member Savings Manager | Vision for a Better Life</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member Savings Manager | Admin</title>
 
-    <!-- External Libraries -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <style>
-        /* --- ALL YOUR ORIGINAL CSS IS HERE AND UNCHANGED --- */
-        :root { --primary: #3498db; --secondary: #2c3e50; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #ecf0f1; --dark: #34495e; --gray: #95a5a6; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Power Geez Unicode 1', 'Noto Sans Ethiopic', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #333; line-height: 1.6; min-height: 100vh; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .main-app { display: none; }
-        .admin-login { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
-        .login-card { background: #fff; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 420px; width: 100%; text-align: center; }
-        .login-header { background: var(--secondary); color: #fff; padding: 28px 20px; }
-        .login-body { padding: 26px; }
-        .login-card .form-group { margin-bottom: 18px; text-align: left; }
-        .form-control { width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
-        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-primary { background: var(--primary); color: #fff; }
-        header { background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); padding: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .header-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-        .main-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        .card { background: #fff; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); padding: 25px; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .form-buttons { display: flex; gap: 10px; margin-top: 10px; }
-        .tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid #eee; }
-        .tab { padding: 10px 16px; cursor: pointer; border-bottom: 3px solid transparent; }
-        .tab.active { border-bottom-color: var(--primary); color: var(--primary); font-weight: 600; }
-        .tab-content { display: none; } .tab-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 14px 10px; text-align: left; border-bottom: 1px solid #eee; }
-        .action-buttons .btn { background: transparent; padding: 6px 10px; }
-        .action-buttons .edit-btn { color: var(--primary); } .action-buttons .delete-btn { color: var(--danger); }
-        .notification { position: fixed; top: 20px; right: 20px; padding: 14px 20px; border-radius: 6px; color: #fff; transform: translateX(120%); transition: transform .4s ease; z-index: 1001; }
-        .notification.show { transform: translateX(0); }
-        .notification-success { background: var(--success); } .notification-error { background: var(--danger); }
-        .otp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .otp-content { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
-        .otp-input { width: 100%; padding: 15px; font-size: 20px; text-align: center; letter-spacing: 5px; margin: 20px 0; }
-        .loading { display: none; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
-        .user-login { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
-        .user-login-card { background: #fff; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 420px; width: 100%; text-align: center; padding: 30px; }
-        .user-login-form { margin-top: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @media (max-width: 992px) { .main-content { grid-template-columns: 1fr; } }
-    </style>
+  <style>
+    :root {
+      --primary: #007bff;
+      --secondary: #2c3e50;
+      --success: #28a745;
+      --danger: #dc3545;
+      --light: #f8f9fa;
+      --dark: #343a40;
+      --gray: #6c757d;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Noto Sans Ethiopic", "Power Geez Unicode 1", sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #f6f8fb, #dfe9f3);
+      color: #333;
+      padding: 30px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      border-bottom: 2px solid var(--light);
+      padding-bottom: 15px;
+    }
+    header h1 {
+      font-size: 1.6rem;
+      color: var(--secondary);
+    }
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .admin-login {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 35px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+    .login-card h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--secondary);
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 2px solid var(--light);
+      margin-bottom: 15px;
+    }
+    .tab {
+      padding: 10px 16px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: 0.2s;
+    }
+    .tab.active {
+      border-bottom-color: var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th,
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: var(--light);
+    }
+    tr:hover {
+      background: #f8f9fa;
+    }
+    .search-box {
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      color: white;
+      display: none;
+    }
+    .notification.show {
+      display: block;
+    }
+    .notification-success {
+      background: var(--success);
+    }
+    .notification-error {
+      background: var(--danger);
+    }
+  </style>
 </head>
 <body>
-
-    <!-- OTP Modal -->
-    <div class="otp-modal" id="otpModal">
-        <div class="otp-content">
-            <h2>🔐 OTP Verification</h2>
-            <p id="otpMessage">Enter the 6-digit code sent to your phone</p>
-            <input type="text" id="otpInput" class="otp-input" placeholder="------" maxlength="6">
-            <div class="loading" id="otpLoading"></div>
-            <div class="form-buttons">
-                <button class="btn btn-primary" id="verifyOtpBtn">Verify</button>
-                <button class="btn" id="resendOtpBtn">Resend</button>
-                <button class="btn" id="closeOtpBtn">Close</button>
-            </div>
-            <p id="otpTimer" style="margin-top: 10px; color: #666;"></p>
+  <!-- Admin Login -->
+  <div class="admin-login" id="adminLogin">
+    <div class="login-card">
+      <h2>Admin Login</h2>
+      <form id="adminForm">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="adminUsername" class="form-control" required />
         </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="adminPassword" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%">
+          <i class="fas fa-lock"></i> Login
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div class="container" id="mainApp" style="display: none">
+    <header>
+      <h1>Member Savings Manager</h1>
+      <div>
+        <button class="btn btn-primary" id="importBtn">
+          <i class="fas fa-file-import"></i> Import Excel
+        </button>
+        <button class="btn btn-success" id="exportBtn">
+          <i class="fas fa-file-export"></i> Export Excel
+        </button>
+        <button class="btn btn-danger" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </header>
+
+    <div class="search-box">
+      <input
+        type="text"
+        id="searchInput"
+        class="form-control"
+        placeholder="Search by name or ID..."
+        style="width: 60%"
+      />
+      <button class="btn btn-danger" id="bulkDeleteBtn">
+        <i class="fas fa-trash"></i> Delete Selected
+      </button>
     </div>
 
-    <!-- User Login Section -->
-    <div class="user-login" id="userLogin" style="display: none;">
-        <div class="user-login-card">
-            <h2>Member Login</h2>
-            <p>Enter your phone number to receive OTP</p>
-            <form class="user-login-form" id="userLoginForm">
-                <div class="form-group">
-                    <label for="userPhone">Phone Number</label>
-                    <input type="tel" id="userPhone" class="form-control" placeholder="+2519..." required />
-                </div>
-                <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-sign-in-alt"></i> Request OTP</button>
-            </form>
-            <button class="btn" id="backToAdminBtn" style="margin-top: 15px; background: #6c757d;">Back to Admin Login</button>
-        </div>
-    </div>
+    <table id="membersTable">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="selectAll" /></th>
+          <th>ID</th>
+          <th>Full Name</th>
+          <th>Phone</th>
+          <th>Total Savings</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-    <!-- Admin Login Section -->
-    <div class="admin-login" id="adminLogin">
-        <div class="login-card">
-            <div class="login-header"><h2>Admin Login</h2><p>Vision for a Better Life</p></div>
-            <div class="login-body">
-                <form id="adminForm">
-                    <div class="form-group"><label for="adminUsername">Username</label><input type="text" id="adminUsername" class="form-control" placeholder="admin" required /></div>
-                    <div class="form-group"><label for="adminPassword">Password</label><input type="password" id="adminPassword" class="form-control" placeholder="password" required /></div>
-                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-sign-in-alt"></i> Login</button>
-                </form>
-                <div style="margin-top: 20px; text-align: center;">
-                    <button class="btn" id="memberLoginBtn" style="background: #6c757d;">Member Login</button>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div class="notification" id="notification"></div>
 
-    <!-- Main Application -->
-    <div class="main-app" id="mainApp">
-        <div class="container">
-            <header>
-                <div class="logo"><h1>Member Savings Manager</h1></div>
-                <div class="header-actions">
-                    <button class="btn btn-primary" id="addMemberBtn"><i class="fas fa-plus"></i> Add Member</button>
-                    <button class="btn btn-success" id="exportBtn"><i class="fas fa-file-export"></i> Export Data</button>
-                    <button class="btn btn-danger" id="logoutAdminBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-                </div>
-            </header>
-            <div class="stats-container"> <!-- Stats content if any --> </div>
-            <main class="main-content">
-                <div class="card">
-                    <div class="card-header"><h2>Add / Edit Member</h2></div>
-                    <div class="tabs">
-                        <div class="tab active" data-tab="manual">Manual Entry</div>
-                        <div class="tab" data-tab="excel">Excel Import</div>
-                    </div>
-                    <div class="tab-content active" id="manual-tab">
-                        <form id="manualEntryForm">
-                            <input type="hidden" id="editingMemberId">
-                            <div class="form-row">
-                                <div class="form-group"><label for="memberId">Member ID</label><input type="text" id="memberId" class="form-control" required /></div>
-                                <div class="form-group"><label for="fullName">Full Name</label><input type="text" id="fullName" class="form-control" required /></div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group"><label for="phoneNumber">Phone Number</label><input type="tel" id="phoneNumber" class="form-control" placeholder="+2519..." required /></div>
-                                <!-- Removed Chat ID field -->
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group"><label for="shareAmount">Share Amount</label><input type="number" id="shareAmount" class="form-control" min="0" step="0.01" required /></div>
-                                <div class="form-group"><label for="entranceFee">Entrance Fee</label><input type="number" id="entranceFee" class="form-control" min="0" step="0.01" required /></div>
-                            </div>
-                            <div class="form-group"><label for="totalSavings">Total Savings</label><input type="number" id="totalSavings" class="form-control" readonly /></div>
-                            <div class="form-group"><label for="date">Date</label><input type="date" id="date" class="form-control" required /></div>
-                            <div class="form-buttons">
-                                <button type="submit" class="btn btn-primary">Save Member</button>
-                                <button type="button" class="btn btn-danger" id="cancelEditBtn" style="display:none;">Cancel Edit</button>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="tab-content" id="excel-tab">
-                        <!-- Excel import content here -->
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header"><h2>Member Data</h2><input type="text" id="searchInput" class="form-control" placeholder="Search..."></div>
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Total Savings</th><th>Date</th><th>Actions</th></tr></thead>
-                            <tbody id="membersTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-    <div class="notification" id="notification"></div>
-    <script>
-        'use strict';
-        let members = [];
-        let editingMemberId = null;
-        let adminCredentials = {};
-        let currentPhone = '';
-        let otpTimer = null;
-        let otpExpiryTime = null;
+  <script>
+    let members = [];
+    const adminCredentials = { username: "admin", password: "admin123" };
 
-        // DOM Elements
-        const membersTableBody = document.getElementById('membersTableBody');
-        const manualEntryForm = document.getElementById('manualEntryForm');
-        const cancelEditBtn = document.getElementById('cancelEditBtn');
-        const adminLogin = document.getElementById('adminLogin');
-        const userLogin = document.getElementById('userLogin');
-        const mainApp = document.getElementById('mainApp');
-        const adminForm = document.getElementById('adminForm');
-        const userLoginForm = document.getElementById('userLoginForm');
-        const logoutAdminBtn = document.getElementById('logoutAdminBtn');
-        const addMemberBtn = document.getElementById('addMemberBtn');
-        const searchInput = document.getElementById('searchInput');
-        const memberLoginBtn = document.getElementById('memberLoginBtn');
-        const backToAdminBtn = document.getElementById('backToAdminBtn');
-        const otpModal = document.getElementById('otpModal');
-        const otpInput = document.getElementById('otpInput');
-        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-        const resendOtpBtn = document.getElementById('resendOtpBtn');
-        const closeOtpBtn = document.getElementById('closeOtpBtn');
-        const otpMessage = document.getElementById('otpMessage');
-        const otpLoading = document.getElementById('otpLoading');
-        const otpTimerElement = document.getElementById('otpTimer');
+    const adminLogin = document.getElementById("adminLogin");
+    const mainApp = document.getElementById("mainApp");
+    const adminForm = document.getElementById("adminForm");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const searchInput = document.getElementById("searchInput");
+    const membersTableBody = document.querySelector("#membersTable tbody");
+    const selectAll = document.getElementById("selectAll");
+    const bulkDeleteBtn = document.getElementById("bulkDeleteBtn");
 
-        // Storage Functions
-        const saveMembersToStorage = () => localStorage.setItem('churchMembersData', JSON.stringify(members));
-        const loadMembersFromStorage = () => members = JSON.parse(localStorage.getItem('churchMembersData')) || [];
-        const saveAdminCredentials = () => localStorage.setItem('adminCredentials', JSON.stringify(adminCredentials));
-        const loadAdminCredentials = () => {
-            const storedCreds = localStorage.getItem('adminCredentials');
-            adminCredentials = storedCreds ? JSON.parse(storedCreds) : { username: 'admin', password: 'admin123' };
-            if (!storedCreds) saveAdminCredentials();
-        };
+    // Notifications
+    function showNotification(msg, type = "success") {
+      const notif = document.getElementById("notification");
+      notif.textContent = msg;
+      notif.className = `notification notification-${type} show`;
+      setTimeout(() => (notif.className = "notification"), 3000);
+    }
 
-        // OTP Functions
-        async function requestOtp(phone) {
-            try {
-                const response = await fetch('/api/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone, action: 'request-login' })
-                });
-                
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('OTP Request Error:', error);
-                return { success: false, message: 'Network error. Please try again.' };
-            }
-        }
+    // Local storage
+    const saveMembers = () =>
+      localStorage.setItem("membersData", JSON.stringify(members));
+    const loadMembers = () =>
+      (members = JSON.parse(localStorage.getItem("membersData")) || []);
 
-        async function verifyOtp(phone, otp) {
-            try {
-                const response = await fetch('/api/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone, otp, action: 'verify' })
-                });
-                
-                const data = await response.json();
-                return data;
-            } catch (error) {
-                console.error('OTP Verification Error:', error);
-                return { success: false, message: 'Network error. Please try again.' };
-            }
-        }
+    // Render table
+    function renderTable(data = members) {
+      membersTableBody.innerHTML = "";
+      data.forEach((m, i) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><input type="checkbox" class="memberCheckbox" data-id="${m.id}" /></td>
+          <td>${m.id}</td>
+          <td>${m.name}</td>
+          <td>${m.phone || ""}</td>
+          <td>${m.totalSavings || 0}</td>
+          <td>${m.date || ""}</td>
+        `;
+        membersTableBody.appendChild(row);
+      });
+    }
 
-        function showOtpModal(phone) {
-            currentPhone = phone;
-            otpInput.value = '';
-            otpMessage.textContent = `Enter the 6-digit code sent to ${phone}`;
-            otpModal.style.display = 'flex';
-            startOtpTimer();
-        }
+    // Admin login
+    adminForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const user = document.getElementById("adminUsername").value.trim();
+      const pass = document.getElementById("adminPassword").value.trim();
+      if (user === adminCredentials.username && pass === adminCredentials.password) {
+        adminLogin.style.display = "none";
+        mainApp.style.display = "block";
+        loadMembers();
+        renderTable();
+      } else showNotification("Invalid credentials!", "error");
+    });
 
-        function hideOtpModal() {
-            otpModal.style.display = 'none';
-            if (otpTimer) clearInterval(otpTimer);
-            otpTimerElement.textContent = '';
-        }
+    logoutBtn.addEventListener("click", () => {
+      mainApp.style.display = "none";
+      adminLogin.style.display = "flex";
+    });
 
-        function startOtpTimer() {
-            if (otpTimer) clearInterval(otpTimer);
-            otpExpiryTime = Date.now() + (5 * 60 * 1000); // 5 minutes
-            
-            function updateTimer() {
-                const now = Date.now();
-                const remaining = Math.max(0, otpExpiryTime - now);
-                const minutes = Math.floor(remaining / 60000);
-                const seconds = Math.floor((remaining % 60000) / 1000);
-                
-                otpTimerElement.textContent = `Code expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
-                if (remaining <= 0) {
-                    clearInterval(otpTimer);
-                    otpTimerElement.textContent = 'Code expired. Please request a new one.';
-                }
-            }
-            
-            updateTimer();
-            otpTimer = setInterval(updateTimer, 1000);
-        }
+    // Search
+    searchInput.addEventListener("input", (e) => {
+      const val = e.target.value.toLowerCase();
+      const filtered = members.filter(
+        (m) =>
+          m.name.toLowerCase().includes(val) ||
+          m.id.toLowerCase().includes(val) ||
+          (m.phone && m.phone.includes(val))
+      );
+      renderTable(filtered);
+    });
 
-        function showLoading(show) {
-            otpLoading.style.display = show ? 'block' : 'none';
-            verifyOtpBtn.disabled = show;
-            resendOtpBtn.disabled = show;
-        }
+    // Bulk delete
+    bulkDeleteBtn.addEventListener("click", () => {
+      const selected = [...document.querySelectorAll(".memberCheckbox:checked")].map(
+        (cb) => cb.dataset.id
+      );
+      if (selected.length === 0) return showNotification("No members selected", "error");
+      if (!confirm("Delete selected members?")) return;
+      members = members.filter((m) => !selected.includes(m.id));
+      saveMembers();
+      renderTable();
+      showNotification("Selected members deleted");
+      selectAll.checked = false;
+    });
 
-        // Login Navigation
-        memberLoginBtn.addEventListener('click', () => {
-            adminLogin.style.display = 'none';
-            userLogin.style.display = 'flex';
+    // Select all
+    selectAll.addEventListener("change", () => {
+      document
+        .querySelectorAll(".memberCheckbox")
+        .forEach((cb) => (cb.checked = selectAll.checked));
+    });
+
+    // Excel import/export
+    document.getElementById("importBtn").addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".xlsx,.xls";
+      input.addEventListener("change", handleExcelImport);
+      input.click();
+    });
+
+    function handleExcelImport(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        json.forEach((row) => {
+          members.push({
+            id: row.ID?.toString() || row["አባል መታወቂያ"] || `ID-${Date.now()}`,
+            name: row["Full Name"] || row["ሙሉ ስም"] || "",
+            phone: row["Phone"] || row["ስልክ"] || "",
+            totalSavings:
+              row["Total Savings"] || row["ጠቅላላ ቁጠባ"] || 0,
+            date: row["Date"] || row["ቀን"] || "",
+          });
         });
+        saveMembers();
+        renderTable();
+        showNotification("Excel imported successfully");
+      };
+      reader.readAsArrayBuffer(file);
+    }
 
-        backToAdminBtn.addEventListener('click', () => {
-            userLogin.style.display = 'none';
-            adminLogin.style.display = 'flex';
-        });
-
-        // User Login Flow
-        userLoginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const phone = document.getElementById('userPhone').value.trim();
-            
-            // Check if phone exists in members database
-            const member = members.find(m => m.phone === phone);
-            if (!member) {
-                showNotification('Phone number not registered. Please contact admin.', 'error');
-                return;
-            }
-            
-            // Request OTP
-            const result = await requestOtp(phone);
-            
-            if (result.success) {
-                showOtpModal(phone);
-            } else {
-                showNotification(result.message || 'Failed to send OTP', 'error');
-            }
-        });
-
-        // OTP Event Listeners
-        verifyOtpBtn.addEventListener('click', async () => {
-            const otp = otpInput.value.trim();
-            
-            if (!otp || otp.length !== 6) {
-                showNotification('Please enter a 6-digit code', 'error');
-                return;
-            }
-            
-            showLoading(true);
-            
-            const result = await verifyOtp(currentPhone, otp);
-            
-            if (result.success) {
-                hideOtpModal();
-                showNotification('Login successful!', 'success');
-                
-                // For user login, you can redirect to user dashboard or show member info
-                // For now, we'll just close the modal and show a success message
-                setTimeout(() => {
-                    userLogin.style.display = 'none';
-                    adminLogin.style.display = 'flex';
-                    document.getElementById('userPhone').value = '';
-                }, 1500);
-            } else {
-                showNotification(result.message || 'Invalid OTP code', 'error');
-            }
-            
-            showLoading(false);
-        });
-
-        resendOtpBtn.addEventListener('click', async () => {
-            showLoading(true);
-            const result = await requestOtp(currentPhone);
-            
-            if (result.success) {
-                showNotification('New code sent!', 'success');
-                startOtpTimer();
-            } else {
-                showNotification(result.message || 'Failed to send code', 'error');
-            }
-            
-            showLoading(false);
-        });
-
-        closeOtpBtn.addEventListener('click', hideOtpModal);
-
-        // Admin Login Functions
-        function setupAdminLogin() {
-            adminForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const username = document.getElementById('adminUsername').value.trim();
-                const password = document.getElementById('adminPassword').value.trim();
-                if (username === adminCredentials.username && password === adminCredentials.password) {
-                    adminLogin.style.display = 'none';
-                    mainApp.style.display = 'block';
-                } else {
-                    showNotification('Invalid credentials!', 'error');
-                }
-            });
-            
-            logoutAdminBtn.addEventListener('click', () => {
-                mainApp.style.display = 'none';
-                adminLogin.style.display = 'flex';
-            });
-        }
-
-        // Member Management Functions
-        function renderMembersTable(data = members) {
-            membersTableBody.innerHTML = '';
-            data.forEach(m => {
-                const tr = document.createElement('tr');
-                tr.dataset.id = m.id;
-                tr.innerHTML = `
-                    <td>${m.id}</td><td>${m.name}</td><td>${m.phone || ''}</td>
-                    <td>${(m.totalSavings || 0).toLocaleString()}</td><td>${m.date}</td>
-                    <td class="action-buttons">
-                        <button class="btn edit-btn" title="Edit"><i class="fas fa-edit"></i></button>
-                        <button class="btn delete-btn" title="Delete"><i class="fas fa-trash"></i></button>
-                    </td>`;
-                membersTableBody.appendChild(tr);
-            });
-        }
-
-        function showNotification(message, type) {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification notification-${type} show`;
-            setTimeout(() => notification.classList.remove('show'), 3000);
-        }
-
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            const memberData = {
-                id: document.getElementById('memberId').value.trim(),
-                name: document.getElementById('fullName').value.trim(),
-                phone: document.getElementById('phoneNumber').value.trim(),
-                share: parseFloat(document.getElementById('shareAmount').value) || 0,
-                entranceFee: parseFloat(document.getElementById('entranceFee').value) || 0,
-                date: document.getElementById('date').value,
-            };
-            memberData.totalSavings = memberData.share + memberData.entranceFee;
-
-            if (editingMemberId) {
-                const index = members.findIndex(m => m.id === editingMemberId);
-                if (index !== -1) members[index] = { ...members[index], ...memberData };
-                showNotification('Member updated successfully!', 'success');
-            } else {
-                if (members.some(m => m.id === memberData.id)) {
-                    return showNotification('Member ID already exists!', 'error');
-                }
-                members.push(memberData);
-                showNotification('Member added successfully!', 'success');
-            }
-            saveMembersToStorage();
-            renderMembersTable(members);
-            resetForm();
-        }
-
-        function editMember(id) {
-            const member = members.find(m => m.id === id);
-            if (!member) return;
-            editingMemberId = id;
-            document.getElementById('memberId').value = member.id;
-            document.getElementById('memberId').readOnly = true;
-            document.getElementById('fullName').value = member.name;
-            document.getElementById('phoneNumber').value = member.phone || '';
-            document.getElementById('shareAmount').value = member.share;
-            document.getElementById('entranceFee').value = member.entranceFee;
-            document.getElementById('totalSavings').value = member.totalSavings;
-            document.getElementById('date').value = member.date;
-            
-            manualEntryForm.querySelector('button[type="submit"]').textContent = 'Update Member';
-            cancelEditBtn.style.display = 'inline-block';
-        }
-
-        function deleteMember(id) {
-            if (confirm('Are you sure you want to delete this member?')) {
-                members = members.filter(m => m.id !== id);
-                saveMembersToStorage();
-                renderMembersTable(members);
-                showNotification('Member deleted.', 'success');
-                if (editingMemberId === id) resetForm();
-            }
-        }
-
-        function resetForm() {
-            editingMemberId = null;
-            manualEntryForm.reset();
-            document.getElementById('memberId').readOnly = false;
-            manualEntryForm.querySelector('button[type="submit"]').textContent = 'Save Member';
-            cancelEditBtn.style.display = 'none';
-        }
-
-        function handleTableActions(e) {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-            const id = btn.closest('tr').dataset.id;
-            if (btn.classList.contains('edit-btn')) editMember(id);
-            if (btn.classList.contains('delete-btn')) deleteMember(id);
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            loadAdminCredentials();
-            setupAdminLogin();
-            loadMembersFromStorage();
-            renderMembersTable();
-
-            manualEntryForm.addEventListener('submit', handleFormSubmit);
-            cancelEditBtn.addEventListener('click', resetForm);
-            addMemberBtn.addEventListener('click', resetForm);
-            membersTableBody.addEventListener('click', handleTableActions);
-
-            searchInput.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const filteredMembers = members.filter(m => 
-                    m.name.toLowerCase().includes(term) ||
-                    m.id.toLowerCase().includes(term) ||
-                    m.phone.includes(term)
-                );
-                renderMembersTable(filteredMembers);
-            });
-
-            ['shareAmount', 'entranceFee'].forEach(id => {
-                document.getElementById(id).addEventListener('input', () => {
-                    const share = parseFloat(document.getElementById('shareAmount').value) || 0;
-                    const entrance = parseFloat(document.getElementById('entranceFee').value) || 0;
-                    document.getElementById('totalSavings').value = (share + entrance).toFixed(2);
-                });
-            });
-            
-            // Tab functionality
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelector('.tab.active').classList.remove('active');
-                    document.querySelector('.tab-content.active').classList.remove('active');
-                    tab.classList.add('active');
-                    document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
-                });
-            });
-        });
-    </script>
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      if (members.length === 0) return showNotification("No data to export", "error");
+      const worksheet = XLSX.utils.json_to_sheet(members);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
+      XLSX.writeFile(workbook, "members_data.xlsx");
+    });
+  </script>
 </body>
 </html>
