@@ -1,160 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Member Portal | Vision for a Better Life</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root { --primary: #3498db; --secondary: #2c3e50; --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --light: #ecf0f1; --dark: #34495e; --gray: #95a5a6; --church-green: #27ae60; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .auth-container { background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 450px; width: 100%; }
-        .auth-header { background: var(--church-green); color: white; padding: 30px 20px; text-align: center; }
-        .auth-body { padding: 30px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
-        .form-control { width: 100%; padding: 14px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
-        .btn { padding: 14px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; font-size: 1rem; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn:disabled { background-color: var(--gray); cursor: not-allowed; }
-        .otp-container { display: none; }
-        .otp-inputs { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
-        .otp-input { width: 50px; height: 50px; text-align: center; font-size: 1.5rem; border: 2px solid #ddd; border-radius: 8px; }
-        .dashboard { display: none; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 900px; width: 100%; }
-        .dashboard-header { background: var(--church-green); color: white; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .dashboard-body { padding: 30px; }
-        .balance-card { background: linear-gradient(135deg, var(--primary) 0%, #2980b9 100%); color: white; padding: 30px; border-radius: 15px; }
-        .balance-amount { font-size: 2.5rem; font-weight: 700; }
-        .notification { position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: 600; z-index: 1000; transform: translateX(120%); transition: transform 0.3s ease; }
-        .notification.show { transform: translateX(0); }
-        .notification-success { background: var(--success); } .notification-error { background: var(--danger); } .notification-warning { background: var(--warning); }
-        .spinner { display: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Telegram Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    :root {
+      --primary: #3498db;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --gray: #95a5a6;
+      --church-green: #27ae60;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+    body {
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .auth-container {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-width: 450px;
+      width: 100%;
+      padding: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .form-control {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .otp-container {
+      display: none;
+      margin-top: 20px;
+    }
+    .otp-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .otp-input {
+      width: 50px;
+      height: 50px;
+      text-align: center;
+      font-size: 1.5rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+    }
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      z-index: 1000;
+      transform: translateX(120%);
+      transition: transform 0.3s ease;
+    }
+    .notification.show {
+      transform: translateX(0);
+    }
+    .notification-success {
+      background: var(--success);
+    }
+    .notification-error {
+      background: var(--danger);
+    }
+    .spinner {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Login Page -->
-        <div class="auth-container" id="loginPage">
-            <div class="auth-header"><h1>Vision for a Better Life</h1><p>Member Savings Portal</p></div>
-            <div class="auth-body">
-                <div class="form-group"><label for="phoneNumber">Phone Number</label><input type="tel" id="phoneNumber" class="form-control" placeholder="e.g., +251911330471"></div>
-                <button class="btn btn-primary" id="sendOtpBtn"><span class="btn-text"><i class="fas fa-paper-plane"></i> Send Verification Code</span><span class="spinner"><i class="fas fa-spinner fa-spin"></i></span></button>
-                <div class="otp-container" id="otpContainer">
-                    <div class="form-group"><label>Enter Verification Code from Telegram</label><div class="otp-inputs"><input type="text" class="otp-input" maxlength="1"><input type="text" class="otp-input" maxlength="1"><input type="text" class="otp-input" maxlength="1"><input type="text" class="otp-input" maxlength="1"><input type="text" class="otp-input" maxlength="1"><input type="text" class="otp-input" maxlength="1"></div></div>
-                    <button class="btn btn-success" id="verifyOtpBtn"><i class="fas fa-lock-open"></i> Verify & Login</button>
-                </div>
-            </div>
-        </div>
-        <!-- Dashboard Page -->
-        <div class="dashboard" id="dashboardPage">
-            <div class="dashboard-header"><div class="user-info"><h2 id="userName"></h2></div><button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
-            <div class="dashboard-body"><div class="balance-card"><div class="balance-title">Total Savings Balance</div><div class="balance-amount" id="accountBalance"></div></div></div>
-        </div>
+  <div class="auth-container">
+    <h2>Vision for a Better Life</h2>
+    <p>Member Savings Portal</p>
+
+    <div class="form-group">
+      <label for="phoneNumber">Phone Number</label>
+      <input type="tel" id="phoneNumber" class="form-control" placeholder="+251911330471" />
     </div>
-    <div class="notification" id="notification"></div>
-    <script>
-        const loginPage = document.getElementById('loginPage');
-        const dashboardPage = document.getElementById('dashboardPage');
-        const phoneNumberInput = document.getElementById('phoneNumber');
-        const sendOtpBtn = document.getElementById('sendOtpBtn');
-        const otpContainer = document.getElementById('otpContainer');
-        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const notification = document.getElementById('notification');
-        const otpInputs = document.querySelectorAll('.otp-input');
-        const sendOtpBtnText = document.querySelector('#sendOtpBtn .btn-text');
-        const sendOtpBtnSpinner = document.querySelector('#sendOtpBtn .spinner');
-        let currentUser = null;
-        let sentOtp = null;
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            sendOtpBtn.addEventListener('click', sendOtp);
-            verifyOtpBtn.addEventListener('click', verifyOtp);
-            logoutBtn.addEventListener('click', logout);
+
+    <button class="btn" id="sendOtpBtn">
+      <span class="btn-text"><i class="fas fa-paper-plane"></i> Send Verification Code</span>
+      <span class="spinner"><i class="fas fa-spinner fa-spin"></i></span>
+    </button>
+
+    <div class="otp-container" id="otpContainer">
+      <div class="form-group">
+        <label>Enter Verification Code from Telegram</label>
+        <div class="otp-inputs">
+          <input type="text" class="otp-input" maxlength="1">
+          <input type="text" class="otp-input" maxlength="1">
+          <input type="text" class="otp-input" maxlength="1">
+          <input type="text" class="otp-input" maxlength="1">
+          <input type="text" class="otp-input" maxlength="1">
+          <input type="text" class="otp-input" maxlength="1">
+        </div>
+      </div>
+      <button class="btn" id="verifyOtpBtn"><i class="fas fa-lock-open"></i> Verify & Login</button>
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script>
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const otpContainer = document.getElementById('otpContainer');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const sendOtpBtnText = document.querySelector('.btn-text');
+    const sendOtpBtnSpinner = document.querySelector('.spinner');
+    const notification = document.getElementById('notification');
+
+    let currentUser = null;
+    let sentOtp = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      sendOtpBtn.addEventListener('click', sendOtp);
+      verifyOtpBtn.addEventListener('click', verifyOtp);
+    });
+
+    otpInputs.forEach((input, idx) => {
+      input.addEventListener('input', () => {
+        if (input.value.length === 1 && idx < otpInputs.length - 1) {
+          otpInputs[idx + 1].focus();
+        }
+      });
+    });
+
+    async function sendOtp() {
+      const phone = phoneNumberInput.value.trim();
+      if (!phone) return showNotification("Enter phone number", "error");
+
+      sendOtpBtn.disabled = true;
+      sendOtpBtnText.style.display = 'none';
+      sendOtpBtnSpinner.style.display = 'inline-block';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone }),
         });
 
-        function getMemberByPhone(phone) {
-            const membersData = localStorage.getItem('churchMembersData');
-            if (!membersData) return null;
-            try {
-                const members = JSON.parse(membersData);
-                return members.find(member => member.phone === phone);
-            } catch (e) { return null; }
-        }
+        const data = await res.json();
+        if (!data.success) return showNotification(data.message || "Phone not found", "error");
 
-        function generateOtp() {
-            return Math.floor(100000 + Math.random() * 900000).toString();
-        }
+        currentUser = data.user;
+        if (!currentUser.chatId) return showNotification("No Telegram chat ID", "error");
 
-        async function sendOtp() {
-            const phoneNumber = phoneNumberInput.value.trim();
-            if (!phoneNumber) return showNotification('Please enter your phone number', 'error');
-            const member = getMemberByPhone(phoneNumber);
-            if (!member) return showNotification('No account found with this phone number.', 'error');
-            if (!member.chatId) return showNotification('Account does not have a Telegram Chat ID. Contact admin.', 'warning');
+        sentOtp = generateOtp();
 
-            sendOtpBtn.disabled = true;
-            sendOtpBtnText.style.display = 'none';
-            sendOtpBtnSpinner.style.display = 'inline-block';
-            sentOtp = generateOtp();
-            currentUser = member;
+        const otpRes = await fetch('/api/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId: currentUser.chatId, otp: sentOtp }),
+        });
 
-            try {
-                const response = await fetch('/api/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chatId: currentUser.chatId, otp: sentOtp }),
-                });
-                if (!response.ok) { throw new Error('Server call failed.'); }
-                await response.json(); // Wait for the JSON response
-                showNotification(`Verification code sent to your Telegram`, 'success');
-                otpContainer.style.display = 'block';
-            } catch (error) {
-                console.error(error);
-                sentOtp = null; // Invalidate OTP if sending failed
-                currentUser = null;
-                showNotification('Failed to send verification code. Check console.', 'error');
-            } finally {
-                sendOtpBtn.disabled = false;
-                sendOtpBtnText.style.display = 'inline-flex';
-                sendOtpBtnSpinner.style.display = 'none';
-            }
-        }
-        
-        function verifyOtp() {
-            const enteredOtp = Array.from(otpInputs).map(input => input.value).join('');
-            if (enteredOtp.length !== 6) return showNotification('Please enter the 6-digit code', 'error');
-            if (enteredOtp === sentOtp && sentOtp !== null) {
-                showNotification('Login successful!', 'success');
-                showDashboard();
-            } else {
-                showNotification('Invalid verification code.', 'error');
-            }
-        }
+        if (!otpRes.ok) throw new Error("Failed to send OTP");
 
-        function showDashboard() {
-            document.getElementById('userName').textContent = currentUser.name;
-            document.getElementById('accountBalance').textContent = `ETB ${(currentUser.totalSavings || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-            loginPage.style.display = 'none';
-            dashboardPage.style.display = 'block';
-        }
-        
-        function logout() {
-            currentUser = null;
-            sentOtp = null;
-            dashboardPage.style.display = 'none';
-            loginPage.style.display = 'block';
-            phoneNumberInput.value = '';
-            otpContainer.style.display = 'none';
-            otpInputs.forEach(input => input.value = '');
-        }
-        
-        function showNotification(message, type) {
-            notification.textContent = message;
-            notification.className = `notification notification-${type} show`;
-            setTimeout(() => { notification.classList.remove('show'); }, 3000);
-        }
-    </script>
+        showNotification("Verification code sent via Telegram", "success");
+        otpContainer.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        showNotification("Failed to send OTP", "error");
+        sentOtp = null;
+        currentUser = null;
+      } finally {
+        sendOtpBtn.disabled = false;
+        sendOtpBtnText.style.display = 'inline-flex';
+        sendOtpBtnSpinner.style.display = 'none';
+      }
+    }
+
+    function verifyOtp() {
+      const enteredOtp = Array.from(otpInputs).map(input => input.value).join('');
+      if (enteredOtp.length !== 6) return showNotification("Enter the 6-digit code", "error");
+      if (enteredOtp === sentOtp) {
+        showNotification("Login successful!", "success");
+        alert("Logged in as " + currentUser.name);
+        // Redirect or show dashboard
+      } else {
+        showNotification("Invalid verification code.", "error");
+      }
+    }
+
+    function generateOtp() {
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+
+    function showNotification(message, type) {
+      notification.textContent = message;
+      notification.className = `notification notification-${type} show`;
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+  </script>
 </body>
 </html>
