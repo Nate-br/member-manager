@@ -42,10 +42,31 @@
         .notification { position: fixed; top: 20px; right: 20px; padding: 14px 20px; border-radius: 6px; color: #fff; transform: translateX(120%); transition: transform .4s ease; z-index: 1001; }
         .notification.show { transform: translateX(0); }
         .notification-success { background: var(--success); } .notification-error { background: var(--danger); }
+        .otp-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .otp-content { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
+        .otp-input { width: 100%; padding: 15px; font-size: 20px; text-align: center; letter-spacing: 5px; margin: 20px 0; }
+        .loading { display: none; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @media (max-width: 992px) { .main-content { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
+
+    <!-- OTP Modal -->
+    <div class="otp-modal" id="otpModal">
+        <div class="otp-content">
+            <h2>🔐 OTP Verification</h2>
+            <p id="otpMessage">Enter the 6-digit code sent to your phone</p>
+            <input type="text" id="otpInput" class="otp-input" placeholder="------" maxlength="6">
+            <div class="loading" id="otpLoading"></div>
+            <div class="form-buttons">
+                <button class="btn btn-primary" id="verifyOtpBtn">Verify</button>
+                <button class="btn" id="resendOtpBtn">Resend</button>
+                <button class="btn" id="closeOtpBtn">Close</button>
+            </div>
+            <p id="otpTimer" style="margin-top: 10px; color: #666;"></p>
+        </div>
+    </div>
 
     <!-- Admin Login Section -->
     <div class="admin-login" id="adminLogin">
@@ -89,7 +110,7 @@
                             </div>
                             <div class="form-row">
                                 <div class="form-group"><label for="phoneNumber">Phone Number</label><input type="tel" id="phoneNumber" class="form-control" placeholder="+2519..." required /></div>
-                                <div class="form-group"><label for="chatId">Telegram Chat ID</label><input type="text" id="chatId" class="form-control" placeholder="Numeric ID" /></div>
+                                <!-- Removed Chat ID field -->
                             </div>
                             <div class="form-row">
                                 <div class="form-group"><label for="shareAmount">Share Amount</label><input type="number" id="shareAmount" class="form-control" min="0" step="0.01" required /></div>
@@ -111,7 +132,7 @@
                     <div class="card-header"><h2>Member Data</h2><input type="text" id="searchInput" class="form-control" placeholder="Search..."></div>
                     <div class="table-container">
                         <table>
-                            <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Chat ID</th><th>Total Savings</th><th>Date</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Total Savings</th><th>Date</th><th>Actions</th></tr></thead>
                             <tbody id="membersTableBody"></tbody>
                         </table>
                     </div>
@@ -125,6 +146,9 @@
         let members = [];
         let editingMemberId = null;
         let adminCredentials = {};
+        let currentPhone = '';
+        let otpTimer = null;
+        let otpExpiryTime = null;
 
         // DOM Elements
         const membersTableBody = document.getElementById('membersTableBody');
@@ -136,6 +160,14 @@
         const logoutAdminBtn = document.getElementById('logoutAdminBtn');
         const addMemberBtn = document.getElementById('addMemberBtn');
         const searchInput = document.getElementById('searchInput');
+        const otpModal = document.getElementById('otpModal');
+        const otpInput = document.getElementById('otpInput');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const resendOtpBtn = document.getElementById('resendOtpBtn');
+        const closeOtpBtn = document.getElementById('closeOtpBtn');
+        const otpMessage = document.getElementById('otpMessage');
+        const otpLoading = document.getElementById('otpLoading');
+        const otpTimerElement = document.getElementById('otpTimer');
 
         // Storage Functions
         const saveMembersToStorage = () => localStorage.setItem('churchMembersData', JSON.stringify(members));
@@ -147,24 +179,147 @@
             if (!storedCreds) saveAdminCredentials();
         };
 
+        // OTP Functions
+        async function requestOtp(phone) {
+            try {
+                const response = await fetch('/api/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, action: 'request-login' })
+                });
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('OTP Request Error:', error);
+                return { success: false, message: 'Network error. Please try again.' };
+            }
+        }
+
+        async function verifyOtp(phone, otp) {
+            try {
+                const response = await fetch('/api/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, otp, action: 'verify' })
+                });
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('OTP Verification Error:', error);
+                return { success: false, message: 'Network error. Please try again.' };
+            }
+        }
+
+        function showOtpModal(phone) {
+            currentPhone = phone;
+            otpInput.value = '';
+            otpMessage.textContent = `Enter the 6-digit code sent to ${phone}`;
+            otpModal.style.display = 'flex';
+            startOtpTimer();
+        }
+
+        function hideOtpModal() {
+            otpModal.style.display = 'none';
+            if (otpTimer) clearInterval(otpTimer);
+            otpTimerElement.textContent = '';
+        }
+
+        function startOtpTimer() {
+            if (otpTimer) clearInterval(otpTimer);
+            otpExpiryTime = Date.now() + (5 * 60 * 1000); // 5 minutes
+            
+            function updateTimer() {
+                const now = Date.now();
+                const remaining = Math.max(0, otpExpiryTime - now);
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                otpTimerElement.textContent = `Code expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (remaining <= 0) {
+                    clearInterval(otpTimer);
+                    otpTimerElement.textContent = 'Code expired. Please request a new one.';
+                }
+            }
+            
+            updateTimer();
+            otpTimer = setInterval(updateTimer, 1000);
+        }
+
+        function showLoading(show) {
+            otpLoading.style.display = show ? 'block' : 'none';
+            verifyOtpBtn.disabled = show;
+            resendOtpBtn.disabled = show;
+        }
+
+        // Admin Login Functions
         function setupAdminLogin() {
-            adminForm.addEventListener('submit', (e) => {
+            adminForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const username = document.getElementById('adminUsername').value.trim();
                 const password = document.getElementById('adminPassword').value.trim();
+                
                 if (username === adminCredentials.username && password === adminCredentials.password) {
-                    adminLogin.style.display = 'none';
-                    mainApp.style.display = 'block';
+                    // Show OTP modal for admin login
+                    showOtpModal('+251911330471'); // Use admin phone number
                 } else {
                     showNotification('Invalid credentials!', 'error');
                 }
             });
+            
             logoutAdminBtn.addEventListener('click', () => {
                 mainApp.style.display = 'none';
                 adminLogin.style.display = 'flex';
             });
         }
 
+        // OTP Event Listeners
+        verifyOtpBtn.addEventListener('click', async () => {
+            const otp = otpInput.value.trim();
+            
+            if (!otp || otp.length !== 6) {
+                showNotification('Please enter a 6-digit code', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            const result = await verifyOtp(currentPhone, otp);
+            
+            if (result.success) {
+                hideOtpModal();
+                showNotification('Login successful!', 'success');
+                
+                if (currentPhone === '+251911330471') { // Admin phone
+                    adminLogin.style.display = 'none';
+                    mainApp.style.display = 'block';
+                }
+            } else {
+                showNotification(result.message || 'Invalid OTP code', 'error');
+            }
+            
+            showLoading(false);
+        });
+
+        resendOtpBtn.addEventListener('click', async () => {
+            showLoading(true);
+            const result = await requestOtp(currentPhone);
+            
+            if (result.success) {
+                showNotification('New code sent!', 'success');
+                startOtpTimer();
+            } else {
+                showNotification(result.message || 'Failed to send code', 'error');
+            }
+            
+            showLoading(false);
+        });
+
+        closeOtpBtn.addEventListener('click', hideOtpModal);
+
+        // Member Management Functions
         function renderMembersTable(data = members) {
             membersTableBody.innerHTML = '';
             data.forEach(m => {
@@ -172,7 +327,7 @@
                 tr.dataset.id = m.id;
                 tr.innerHTML = `
                     <td>${m.id}</td><td>${m.name}</td><td>${m.phone || ''}</td>
-                    <td>${m.chatId || 'N/A'}</td><td>${(m.totalSavings || 0).toLocaleString()}</td><td>${m.date}</td>
+                    <td>${(m.totalSavings || 0).toLocaleString()}</td><td>${m.date}</td>
                     <td class="action-buttons">
                         <button class="btn edit-btn" title="Edit"><i class="fas fa-edit"></i></button>
                         <button class="btn delete-btn" title="Delete"><i class="fas fa-trash"></i></button>
@@ -194,7 +349,6 @@
                 id: document.getElementById('memberId').value.trim(),
                 name: document.getElementById('fullName').value.trim(),
                 phone: document.getElementById('phoneNumber').value.trim(),
-                chatId: document.getElementById('chatId').value.trim(),
                 share: parseFloat(document.getElementById('shareAmount').value) || 0,
                 entranceFee: parseFloat(document.getElementById('entranceFee').value) || 0,
                 date: document.getElementById('date').value,
@@ -225,7 +379,6 @@
             document.getElementById('memberId').readOnly = true;
             document.getElementById('fullName').value = member.name;
             document.getElementById('phoneNumber').value = member.phone || '';
-            document.getElementById('chatId').value = member.chatId || ''; // This line was the fix
             document.getElementById('shareAmount').value = member.share;
             document.getElementById('entranceFee').value = member.entranceFee;
             document.getElementById('totalSavings').value = member.totalSavings;
@@ -270,8 +423,6 @@
             manualEntryForm.addEventListener('submit', handleFormSubmit);
             cancelEditBtn.addEventListener('click', resetForm);
             addMemberBtn.addEventListener('click', resetForm);
-            
-            // --- THIS IS THE CORRECTED LINE ---
             membersTableBody.addEventListener('click', handleTableActions);
 
             searchInput.addEventListener('input', (e) => {
