@@ -46,6 +46,9 @@
         .otp-content { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
         .otp-input { width: 100%; padding: 15px; font-size: 20px; text-align: center; letter-spacing: 5px; margin: 20px 0; }
         .loading { display: none; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+        .user-login { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
+        .user-login-card { background: #fff; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); max-width: 420px; width: 100%; text-align: center; padding: 30px; }
+        .user-login-form { margin-top: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @media (max-width: 992px) { .main-content { grid-template-columns: 1fr; } }
     </style>
@@ -68,6 +71,22 @@
         </div>
     </div>
 
+    <!-- User Login Section -->
+    <div class="user-login" id="userLogin" style="display: none;">
+        <div class="user-login-card">
+            <h2>Member Login</h2>
+            <p>Enter your phone number to receive OTP</p>
+            <form class="user-login-form" id="userLoginForm">
+                <div class="form-group">
+                    <label for="userPhone">Phone Number</label>
+                    <input type="tel" id="userPhone" class="form-control" placeholder="+2519..." required />
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-sign-in-alt"></i> Request OTP</button>
+            </form>
+            <button class="btn" id="backToAdminBtn" style="margin-top: 15px; background: #6c757d;">Back to Admin Login</button>
+        </div>
+    </div>
+
     <!-- Admin Login Section -->
     <div class="admin-login" id="adminLogin">
         <div class="login-card">
@@ -78,6 +97,9 @@
                     <div class="form-group"><label for="adminPassword">Password</label><input type="password" id="adminPassword" class="form-control" placeholder="password" required /></div>
                     <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-sign-in-alt"></i> Login</button>
                 </form>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn" id="memberLoginBtn" style="background: #6c757d;">Member Login</button>
+                </div>
             </div>
         </div>
     </div>
@@ -155,11 +177,15 @@
         const manualEntryForm = document.getElementById('manualEntryForm');
         const cancelEditBtn = document.getElementById('cancelEditBtn');
         const adminLogin = document.getElementById('adminLogin');
+        const userLogin = document.getElementById('userLogin');
         const mainApp = document.getElementById('mainApp');
         const adminForm = document.getElementById('adminForm');
+        const userLoginForm = document.getElementById('userLoginForm');
         const logoutAdminBtn = document.getElementById('logoutAdminBtn');
         const addMemberBtn = document.getElementById('addMemberBtn');
         const searchInput = document.getElementById('searchInput');
+        const memberLoginBtn = document.getElementById('memberLoginBtn');
+        const backToAdminBtn = document.getElementById('backToAdminBtn');
         const otpModal = document.getElementById('otpModal');
         const otpInput = document.getElementById('otpInput');
         const verifyOtpBtn = document.getElementById('verifyOtpBtn');
@@ -254,26 +280,38 @@
             resendOtpBtn.disabled = show;
         }
 
-        // Admin Login Functions
-        function setupAdminLogin() {
-            adminForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const username = document.getElementById('adminUsername').value.trim();
-                const password = document.getElementById('adminPassword').value.trim();
-                
-                if (username === adminCredentials.username && password === adminCredentials.password) {
-                    // Show OTP modal for admin login
-                    showOtpModal('+251911330471'); // Use admin phone number
-                } else {
-                    showNotification('Invalid credentials!', 'error');
-                }
-            });
+        // Login Navigation
+        memberLoginBtn.addEventListener('click', () => {
+            adminLogin.style.display = 'none';
+            userLogin.style.display = 'flex';
+        });
+
+        backToAdminBtn.addEventListener('click', () => {
+            userLogin.style.display = 'none';
+            adminLogin.style.display = 'flex';
+        });
+
+        // User Login Flow
+        userLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('userPhone').value.trim();
             
-            logoutAdminBtn.addEventListener('click', () => {
-                mainApp.style.display = 'none';
-                adminLogin.style.display = 'flex';
-            });
-        }
+            // Check if phone exists in members database
+            const member = members.find(m => m.phone === phone);
+            if (!member) {
+                showNotification('Phone number not registered. Please contact admin.', 'error');
+                return;
+            }
+            
+            // Request OTP
+            const result = await requestOtp(phone);
+            
+            if (result.success) {
+                showOtpModal(phone);
+            } else {
+                showNotification(result.message || 'Failed to send OTP', 'error');
+            }
+        });
 
         // OTP Event Listeners
         verifyOtpBtn.addEventListener('click', async () => {
@@ -292,10 +330,13 @@
                 hideOtpModal();
                 showNotification('Login successful!', 'success');
                 
-                if (currentPhone === '+251911330471') { // Admin phone
-                    adminLogin.style.display = 'none';
-                    mainApp.style.display = 'block';
-                }
+                // For user login, you can redirect to user dashboard or show member info
+                // For now, we'll just close the modal and show a success message
+                setTimeout(() => {
+                    userLogin.style.display = 'none';
+                    adminLogin.style.display = 'flex';
+                    document.getElementById('userPhone').value = '';
+                }, 1500);
             } else {
                 showNotification(result.message || 'Invalid OTP code', 'error');
             }
@@ -318,6 +359,26 @@
         });
 
         closeOtpBtn.addEventListener('click', hideOtpModal);
+
+        // Admin Login Functions
+        function setupAdminLogin() {
+            adminForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('adminUsername').value.trim();
+                const password = document.getElementById('adminPassword').value.trim();
+                if (username === adminCredentials.username && password === adminCredentials.password) {
+                    adminLogin.style.display = 'none';
+                    mainApp.style.display = 'block';
+                } else {
+                    showNotification('Invalid credentials!', 'error');
+                }
+            });
+            
+            logoutAdminBtn.addEventListener('click', () => {
+                mainApp.style.display = 'none';
+                adminLogin.style.display = 'flex';
+            });
+        }
 
         // Member Management Functions
         function renderMembersTable(data = members) {
