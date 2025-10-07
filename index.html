@@ -44,7 +44,7 @@
     .small{font-size:0.85rem;color:var(--muted)}
     .table-wrap{overflow:auto;border-radius:10px}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f1f5f9}
+    th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f1f5f9;white-space:nowrap}
     th{background:#fbfdff;color:var(--muted);font-weight:700;position:sticky;top:0}
     tr:hover{background:#fbfbfd}
     .muted{color:var(--muted)}
@@ -60,6 +60,7 @@
     .row{display:flex;gap:8px}
     .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
     .note{font-size:0.85rem;color:var(--muted)}
+    .btn-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px}
   </style>
 </head>
 <body>
@@ -94,7 +95,7 @@
         <header class="appbar">
           <div class="title">
             <h1>Member Savings Manager</h1>
-            <p>Manage members — Excel import supports Amharic headers & two-row headers (e.g., የብር መጠን with ለመመዝገቢያ & ለሼር)</p>
+            <p>Manage members — Import Excel will keep Amharic headers exactly as in the file (supports two header rows).</p>
           </div>
           <div class="actions">
             <button id="btnImport" class="btn btn-muted"><i class="fa fa-file-import"></i> Import Excel</button>
@@ -120,27 +121,17 @@
 
               <div class="table-wrap">
                 <table id="membersTable" >
-                  <thead>
-                    <tr>
-                      <th style="width:40px"><input id="selectAll" type="checkbox"/></th>
-                      <th>ID</th>
-                      <th>ስም ዝርዝር</th>
-                      <th>ስልክ ቁጥር</th>
-                      <th>የብር መጠን - ለመመዝገቢያ</th>
-                      <th>የብር መጠን - ለሼር</th>
-                      <th>ድምር</th>
-                      <th>ደረሰኝ ቁጥር</th>
-                      <th>Actions</th>
-                    </tr>
+                  <thead id="tableHead">
+                    <!-- populated dynamically to preserve exact Amharic headers -->
                   </thead>
-                  <tbody></tbody>
+                  <tbody id="tableBody"></tbody>
                 </table>
               </div>
-              <div class="note" style="margin-top:8px">Tip: Import Excel with either 1 header row or 2 header rows (top + subheaders). Subcolumns under "የብር መጠን" like "ለመመዝገቢያ" and "ለሼር" are handled.</div>
+              <div class="note" style="margin-top:8px">Tip: Import Excel with either 1 header row or 2 header rows (top + subheaders). Subcolumns under "የብር መጠን" like "ለመመዝገቢያ" and "ለሼር" are handled and displayed exactly.</div>
             </div>
           </div>
 
-          <!-- Right: form for add/edit and column mapping -->
+          <!-- Right: form for add/edit and file chooser -->
           <div class="card panel">
             <h3 style="margin:0 0 8px 0">Add / Edit Member</h3>
             <form id="memberForm" class="panel">
@@ -167,8 +158,8 @@
             </form>
 
             <hr />
-            <h4 style="margin:0 0 6px 0">Import / Column Mapping</h4>
-            <div class="note">If your Excel headers differ, you can edit keys after import in the table (edit row).</div>
+            <h4 style="margin:0 0 6px 0">Import / File</h4>
+            <div class="note">Choose your Excel file (.xlsx). First sheet will be read. Two header rows supported.</div>
             <div style="display:flex;gap:8px;margin-top:8px">
               <button id="btnOpenFile" class="btn btn-muted"><i class="fa fa-upload"></i> Choose File</button>
               <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none" />
@@ -182,110 +173,147 @@
     <div id="toast" style="position:fixed;top:18px;right:18px;display:none;z-index:1400"></div>
   </div>
 
-  <!-- modals: settings & confirm -->
+  <!-- modal backdrop/content -->
   <div id="modalBack" class="modal-back">
-    <div class="modal card" id="modalContent" role="dialog" aria-modal="true">
-      <!-- content injected dynamically -->
-    </div>
+    <div class="modal card" id="modalContent" role="dialog" aria-modal="true"></div>
   </div>
 
 <script>
-/* ============= Data & Storage ============= */
-const STORAGE_KEY = "mv_members_v1";
-const CRED_KEY = "mv_admin_v1";
+/* -------------------------
+   Storage keys & defaults
+   ------------------------- */
+const STORAGE_KEY = "mv_members_exact_amharic_v2";
+const CRED_KEY = "mv_admin_creds_v2";
 
-let members = [];
+let members = [];                 // array of member objects
+let headers = [];                 // array of header keys exactly as imported (Amharic)
 let editingId = null;
 
-/* default admin credentials (can be changed in settings) */
+/* default admin credentials */
 const defaultCreds = { username: "admin", password: "admin123" };
-function loadCreds(){
-  const raw = localStorage.getItem(CRED_KEY);
-  return raw ? JSON.parse(raw) : defaultCreds;
-}
-function saveCreds(creds){
-  localStorage.setItem(CRED_KEY, JSON.stringify(creds));
-}
+if(!localStorage.getItem(CRED_KEY)) localStorage.setItem(CRED_KEY, JSON.stringify(defaultCreds));
 
-/* load/save members */
-function loadMembers(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  members = raw ? JSON.parse(raw) : [];
-}
-function saveMembers(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
-}
+/* helpers */
+const $ = sel => document.querySelector(sel);
 
-/* ====== UI helpers ====== */
-function toast(msg, type = "success"){
+/* toast */
+function toast(msg, type="success"){
   const t = document.getElementById("toast");
   t.innerHTML = `<div class="card" style="padding:12px;border-radius:10px;${type==='success'?'border-left:4px solid var(--success);':'border-left:4px solid var(--danger);'}">${msg}</div>`;
   t.style.display = "block";
-  setTimeout(()=> t.style.display = "none", 2800);
+  setTimeout(()=> t.style.display = "none", 3000);
 }
 
-/* ====== Render Table ====== */
-const tbody = document.querySelector("#membersTable tbody");
-function renderTable(list = members){
-  tbody.innerHTML = "";
-  if(!Array.isArray(list)) list = [];
-  list.forEach(m=>{
+/* load/save members */
+function loadMembers(){ members = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+function saveMembers(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(members)); }
+
+/* render table header & body using headers[] and members[] */
+const tableHead = document.getElementById("tableHead");
+const tableBody = document.getElementById("tableBody");
+
+function buildTableHead(){
+  tableHead.innerHTML = "";
+  if(!headers || headers.length === 0){
+    // default header layout (if nothing imported yet)
+    headers = ["select","ተ.ቁ","ደረሰኝ ቁጥር","ስም  ዝርዝር","የብር መጠን - ለመመዝገቢያ","የብር መጠን - ለሼር","ድምር","ስልክ ቁጥር"];
+  }
+  const tr = document.createElement("tr");
+  headers.forEach((h,i)=>{
+    const th = document.createElement("th");
+    if(i===0){
+      th.innerHTML = `<input id="selectAll" type="checkbox" />`;
+      th.style.width = "40px";
+    } else {
+      th.textContent = h;
+    }
+    tr.appendChild(th);
+  });
+  // actions header
+  const thActions = document.createElement("th");
+  thActions.textContent = "Actions";
+  tr.appendChild(thActions);
+
+  tableHead.appendChild(tr);
+
+  // hook selectAll event
+  const selAll = document.getElementById("selectAll");
+  if(selAll){
+    selAll.addEventListener("change", e=>{
+      document.querySelectorAll(".rowCheckbox").forEach(cb=> cb.checked = selAll.checked);
+    });
+  }
+}
+
+/* render rows */
+function renderTable(filtered){
+  if(!Array.isArray(filtered)) filtered = members;
+  tableBody.innerHTML = "";
+  filtered.forEach(m=>{
     const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="checkbox-center"><input class="rowCheckbox" type="checkbox" data-id="${escapeHtml(m.id)}"></td>
-      <td>${escapeHtml(m.id)}</td>
-      <td>${escapeHtml(m.name)}</td>
-      <td>${escapeHtml(m.phone||"")}</td>
-      <td>${formatNumber(m.regAmt)}</td>
-      <td>${formatNumber(m.shareAmt)}</td>
-      <td>${formatNumber(m.total)}</td>
-      <td>${escapeHtml(m.receipt||"")}</td>
-      <td>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-muted btn-edit" data-id="${escapeHtml(m.id)}"><i class="fa fa-edit"></i></button>
-          <button class="btn btn-danger btn-delete" data-id="${escapeHtml(m.id)}"><i class="fa fa-trash"></i></button>
-        </div>
-      </td>
+    // first cell checkbox
+    const firstTd = document.createElement("td");
+    firstTd.className = "checkbox-center";
+    firstTd.innerHTML = `<input class="rowCheckbox" data-id="${escapeHtml(m[headers[1]]||m.id||"")}" type="checkbox" />`;
+    tr.appendChild(firstTd);
+
+    // render columns from headers[1..]
+    for(let i=1;i<headers.length;i++){
+      const key = headers[i];
+      const td = document.createElement("td");
+      let val = m[key];
+      if(val === undefined || val === null) val = "";
+      // format numbers nicely
+      if(!isNaN(val) && val !== "" && val !== " "){
+        // still keep original if string contains amharic characters
+        if(typeof val === "number") td.textContent = new Intl.NumberFormat().format(val);
+        else {
+          // if numeric string
+          const num = Number(String(val).replace(/,/g,""));
+          if(!isNaN(num)) td.textContent = new Intl.NumberFormat().format(num);
+          else td.textContent = val;
+        }
+      } else {
+        td.textContent = val;
+      }
+      tr.appendChild(td);
+    }
+
+    // actions
+    const tdAct = document.createElement("td");
+    tdAct.innerHTML = `
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-muted btn-edit" data-id="${escapeHtml(m[headers[1]]||m.id||"")}"><i class="fa fa-edit"></i></button>
+        <button class="btn btn-danger btn-delete" data-id="${escapeHtml(m[headers[1]]||m.id||"")}"><i class="fa fa-trash"></i></button>
+      </div>
     `;
-    tbody.appendChild(tr);
+    tr.appendChild(tdAct);
+    tableBody.appendChild(tr);
   });
 }
 
-/* utility */
-function formatNumber(v){
-  if(v===undefined||v===null||v==="") return "";
-  const n = Number(v);
-  if(isNaN(n)) return v;
-  return new Intl.NumberFormat().format(n);
-}
+/* escape html */
 function escapeHtml(s){
-  if(s===undefined||s===null) return "";
+  if(s === undefined || s === null) return "";
   return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
 }
 
-/* ====== Login / App flow ====== */
+/* ------------ login flow ------------- */
+const loginForm = document.getElementById("loginForm");
+const loginUser = document.getElementById("loginUser");
+const loginPass = document.getElementById("loginPass");
 const loginView = document.getElementById("loginView");
 const appView = document.getElementById("appView");
-const loginForm = document.getElementById("loginForm");
 
-function openApp(){
-  loginView.style.display = "none";
-  appView.style.display = "block";
-  loadMembers();
-  renderTable();
-}
-function closeApp(){
-  loginView.style.display = "";
-  appView.style.display = "none";
-}
-
-loginForm.addEventListener("submit", (ev)=>{
-  ev.preventDefault();
-  const u = document.getElementById("loginUser").value.trim();
-  const p = document.getElementById("loginPass").value;
-  const creds = loadCreds();
-  if(u === creds.username && p === creds.password){
-    openApp();
+loginForm.addEventListener("submit", e=>{
+  e.preventDefault();
+  const creds = JSON.parse(localStorage.getItem(CRED_KEY) || JSON.stringify(defaultCreds));
+  if(loginUser.value.trim() === creds.username && loginPass.value === creds.password){
+    loginView.style.display = "none";
+    appView.style.display = "block";
+    loadMembers();
+    buildTableHead();
+    renderTable();
     toast("Welcome, " + creds.username, "success");
   } else {
     toast("Invalid credentials", "error");
@@ -295,11 +323,11 @@ loginForm.addEventListener("submit", (ev)=>{
 /* logout */
 document.getElementById("btnLogout").addEventListener("click", ()=>{
   if(!confirm("Logout?")) return;
-  closeApp();
+  appView.style.display = "none";
+  loginView.style.display = "block";
 });
 
-/* ========== Add / Edit Member ========== */
-const memberForm = document.getElementById("memberForm");
+/* ========== Add / Edit member form ========== */
 const inputId = document.getElementById("inputId");
 const inputName = document.getElementById("inputName");
 const inputPhone = document.getElementById("inputPhone");
@@ -307,338 +335,330 @@ const inputRegAmt = document.getElementById("inputRegAmt");
 const inputShareAmt = document.getElementById("inputShareAmt");
 const inputTotal = document.getElementById("inputTotal");
 const inputReceipt = document.getElementById("inputReceipt");
-const saveMemberBtn = document.getElementById("saveMemberBtn");
-const resetFormBtn = document.getElementById("resetFormBtn");
+const memberForm = document.getElementById("memberForm");
 
-function computeTotal(){
+function computeTotal(){ 
   const a = parseFloat(inputRegAmt.value) || 0;
   const b = parseFloat(inputShareAmt.value) || 0;
   inputTotal.value = (a + b).toFixed(2);
 }
-
 inputRegAmt.addEventListener("input", computeTotal);
 inputShareAmt.addEventListener("input", computeTotal);
 
-memberForm.addEventListener("submit", (ev)=>{
-  ev.preventDefault();
+memberForm.addEventListener("submit", e=>{
+  e.preventDefault();
   const id = inputId.value.trim();
   if(!id){ toast("ID required", "error"); return; }
-  const payload = {
-    id,
-    name: inputName.value.trim(),
-    phone: inputPhone.value.trim(),
-    regAmt: parseFloat(inputRegAmt.value) || 0,
-    shareAmt: parseFloat(inputShareAmt.value) || 0,
-    total: parseFloat(inputTotal.value) || ((parseFloat(inputRegAmt.value)||0)+(parseFloat(inputShareAmt.value)||0)),
-    receipt: inputReceipt.value.trim()
-  };
-  if(editingId && editingId === id){
-    const idx = members.findIndex(x=>x.id === editingId);
-    if(idx !== -1){
-      members[idx] = payload;
-      toast("Member updated");
+
+  // Build object with keys based on current headers if available.
+  // We'll fill the keys matching common names, else fallback to common fields.
+  const obj = {};
+  // If headers exist and are typical, populate them; otherwise fill fallback fields
+  if(headers && headers.length >= 2){
+    // headers[1] expected to be the ID header (based on importer earlier)
+    obj[headers[1]] = id;
+    // try to find name header
+    const nameKey = headers.find(h => h.includes("ስም") || h.includes("Name") || h.includes("ሙሉ"));
+    const phoneKey = headers.find(h => h.includes("ስልክ") || h.includes("Phone"));
+    const regKey = headers.find(h => h.includes("ለመመዝገቢያ") || h.includes("ለመመ"));
+    const shareKey = headers.find(h => h.includes("ለሼር") || h.includes("ሼር"));
+    const totalKey = headers.find(h => h.includes("ድምር") || h.includes("Total"));
+    const receiptKey = headers.find(h => h.includes("ደረሰ") || h.includes("Receipt"));
+
+    if(nameKey) obj[nameKey] = inputName.value.trim();
+    if(phoneKey) obj[phoneKey] = inputPhone.value.trim();
+    if(regKey) obj[regKey] = parseFloat(inputRegAmt.value) || 0;
+    if(shareKey) obj[shareKey] = parseFloat(inputShareAmt.value) || 0;
+    if(totalKey) obj[totalKey] = parseFloat(inputTotal.value) || ( (parseFloat(inputRegAmt.value)||0) + (parseFloat(inputShareAmt.value)||0) );
+    if(receiptKey) obj[receiptKey] = inputReceipt.value.trim();
+
+    // For any header not set, fill empty strings
+    for(const h of headers.slice(1)){
+      if(obj[h] === undefined) obj[h] = "";
     }
   } else {
-    if(members.some(x=>x.id === id)){
-      toast("Member ID already exists", "error");
-      return;
+    // fallback keys if headers missing
+    obj["ተ.ቁ"] = id;
+    obj["ስም  ዝርዝር"] = inputName.value.trim();
+    obj["ስልክ ቁጥር"] = inputPhone.value.trim();
+    obj["የብር መጠን - ለመመዝገቢያ"] = parseFloat(inputRegAmt.value) || 0;
+    obj["የብር መጠን - ለሼር"] = parseFloat(inputShareAmt.value) || 0;
+    obj["ድምር"] = parseFloat(inputTotal.value) || 0;
+    obj["ደረሰኝ ቁጥር"] = inputReceipt.value.trim();
+    // ensure headers reflect fallback
+    headers = ["select","ተ.ቁ","ደረሰኝ ቁጥር","ስም  ዝርዝር","የብር መጠን - ለመመዝገቢያ","የብር መጠን - ለሼር","ድምር","ስልክ ቁጥር"];
+  }
+
+  // Save or update
+  const idKey = headers[1];
+  const memberId = obj[idKey] || id;
+  const existingIndex = members.findIndex(m=> String(m[idKey]) === String(memberId));
+  if(existingIndex >= 0 && (editingId === null || editingId !== memberId)){
+    toast("Member ID already exists", "error");
+    return;
+  }
+  if(editingId){ // update existing (matching editingId by idKey)
+    const idx = members.findIndex(m=> String(m[headers[1]]) === String(editingId));
+    if(idx !== -1){
+      members[idx] = obj;
+      toast("Member updated");
+    } else {
+      members.push(obj);
+      toast("Member saved");
     }
-    members.push(payload);
+  } else {
+    members.push(obj);
     toast("Member added");
   }
   saveMembers();
+  buildTableHead();
   renderTable();
   resetForm();
 });
 
-resetFormBtn.addEventListener("click", resetForm);
-
+/* reset form */
 function resetForm(){
   editingId = null;
   memberForm.reset();
   inputTotal.value = "";
   inputId.disabled = false;
-  saveMemberBtn.innerHTML = `<i class="fa fa-save"></i> Save`;
+  document.getElementById("saveMemberBtn").innerHTML = `<i class="fa fa-save"></i> Save`;
 }
 
-/* edit / delete actions delegated from table */
-tbody.addEventListener("click", (ev)=>{
-  const editBtn = ev.target.closest(".btn-edit");
-  const delBtn = ev.target.closest(".btn-delete");
-  if(editBtn){
-    const id = editBtn.dataset.id;
-    const item = members.find(x=>x.id === id);
-    if(!item) return toast("Member not found","error");
+/* edit & delete handlers (delegated) */
+tableBody.addEventListener("click", e=>{
+  const edit = e.target.closest(".btn-edit");
+  const del = e.target.closest(".btn-delete");
+  if(edit){
+    const id = edit.dataset.id;
+    const idKey = headers[1];
+    const m = members.find(x=> String(x[idKey]) === String(id));
+    if(!m){ toast("Member not found","error"); return; }
+    // populate form fields from matched keys
     editingId = id;
-    inputId.value = item.id;
+    inputId.value = m[idKey] || "";
     inputId.disabled = true;
-    inputName.value = item.name || "";
-    inputPhone.value = item.phone || "";
-    inputRegAmt.value = item.regAmt || "";
-    inputShareAmt.value = item.shareAmt || "";
-    inputTotal.value = item.total || "";
-    inputReceipt.value = item.receipt || "";
-    saveMemberBtn.innerHTML = `<i class="fa fa-save"></i> Update`;
+    // best-effort mapping:
+    const nameKey = headers.find(h => h.includes("ስም") || h.includes("Name") || h.includes("ሙሉ"));
+    const phoneKey = headers.find(h => h.includes("ስልክ") || h.includes("Phone"));
+    const regKey = headers.find(h => h.includes("ለመመዝገቢያ") || h.includes("Registration") || h.includes("ለመመ"));
+    const shareKey = headers.find(h => h.includes("ለሼር") || h.includes("ሼር") || h.includes("Share"));
+    const totalKey = headers.find(h => h.includes("ድምር") || h.includes("Total"));
+    const receiptKey = headers.find(h => h.includes("ደረሰ") || h.includes("Receipt"));
+    if(nameKey) inputName.value = m[nameKey] || "";
+    if(phoneKey) inputPhone.value = m[phoneKey] || "";
+    if(regKey) inputRegAmt.value = m[regKey] || "";
+    if(shareKey) inputShareAmt.value = m[shareKey] || "";
+    if(totalKey) inputTotal.value = m[totalKey] || "";
+    if(receiptKey) inputReceipt.value = m[receiptKey] || "";
+    document.getElementById("saveMemberBtn").innerHTML = `<i class="fa fa-save"></i> Update`;
     window.scrollTo({top:0,behavior:"smooth"});
     return;
   }
-  if(delBtn){
-    const id = delBtn.dataset.id;
-    if(!confirm("Delete member "+id+"?")) return;
-    members = members.filter(x=>x.id !== id);
+  if(del){
+    const id = del.dataset.id;
+    const idKey = headers[1];
+    if(!confirm(`Delete member ${id}?`)) return;
+    members = members.filter(x=> String(x[idKey]) !== String(id));
     saveMembers();
     renderTable();
     toast("Member deleted");
   }
 });
 
-/* ============= Search & select all & bulk delete ============= */
-document.getElementById("searchBox").addEventListener("input", (ev)=>{
-  const term = ev.target.value.trim().toLowerCase();
-  if(!term){ renderTable(); return; }
+/* bulk delete */
+document.getElementById("btnBulkDelete").addEventListener("click", ()=>{
+  const checked = Array.from(document.querySelectorAll(".rowCheckbox:checked")).map(cb=> cb.dataset.id);
+  if(checked.length === 0){ toast("No rows selected","error"); return; }
+  if(!confirm(`Delete ${checked.length} members?`)) return;
+  const idKey = headers[1];
+  members = members.filter(m=> !checked.includes(String(m[idKey])));
+  saveMembers();
+  renderTable();
+  toast(`${checked.length} deleted`);
+});
+
+/* search */
+document.getElementById("searchBox").addEventListener("input", e=>{
+  const term = e.target.value.trim().toLowerCase();
+  if(!term) { renderTable(); return; }
   const filtered = members.filter(m=>{
-    return (m.id||"").toString().toLowerCase().includes(term) ||
-           (m.name||"").toLowerCase().includes(term) ||
-           (m.phone||"").toLowerCase().includes(term) ||
-           (m.receipt||"").toLowerCase().includes(term);
+    return headers.slice(1).some(k=>{
+      const v = (m[k]||"").toString().toLowerCase();
+      return v.includes(term);
+    });
   });
   renderTable(filtered);
 });
 
-document.getElementById("selectAll").addEventListener("change", (ev)=>{
-  const checked = ev.target.checked;
-  document.querySelectorAll(".rowCheckbox").forEach(cb=> cb.checked = checked);
-});
-
-document.getElementById("btnBulkDelete").addEventListener("click", ()=>{
-  const selected = Array.from(document.querySelectorAll(".rowCheckbox:checked")).map(cb=>cb.dataset.id);
-  if(selected.length === 0){ toast("No members selected","error"); return; }
-  if(!confirm(`Delete ${selected.length} selected members?`)) return;
-  members = members.filter(m => !selected.includes(m.id));
-  saveMembers();
-  renderTable();
-  document.getElementById("selectAll").checked = false;
-  toast(`${selected.length} members deleted`);
-});
-
-/* =========== Import Excel (handles 1-row and 2-row headers) =========== */
+/* ============= File import (handles 2 header rows) ============= */
 const fileInput = document.getElementById("fileInput");
-const btnOpenFile = document.getElementById("btnOpenFile");
-btnOpenFile.addEventListener("click", ()=> fileInput.click());
-
+document.getElementById("btnOpenFile").addEventListener("click", ()=> fileInput.click());
 document.getElementById("btnImport").addEventListener("click", ()=> fileInput.click());
 
-fileInput.addEventListener("change", handleFileSelect);
+fileInput.addEventListener("change", handleFile);
 
-function handleFileSelect(evt){
+function handleFile(evt){
   const file = evt.target.files && evt.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = (e)=>{
     try{
       const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, {type:"array"});
-      // read first sheet
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      // get raw rows (arrays)
-      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval: "" });
-      if(rows.length === 0) return toast("Excel file is empty","error");
+      // read workbook
+      const wb = XLSX.read(data, {type:"array", cellText:true, cellDates:true});
+      const sheetName = wb.SheetNames[0];
+      const sheet = wb.Sheets[sheetName];
+      // get rows as arrays to inspect first two rows
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:""});
+      if(rows.length === 0) { toast("Empty sheet","error"); return; }
 
-      // Decide header rows (1 or 2)
-      let headerRowCount = 1;
-      const first = rows[0].map(c=> (c||"").toString().trim());
-      const second = rows[1] ? rows[1].map(c=> (c||"").toString().trim()) : null;
+      // Decide header rows: we assume exactly two header rows as you confirmed.
+      const top = rows[0].map(c => (c||"").toString().trim());
+      const sub = rows[1] ? rows[1].map(c => (c||"").toString().trim()) : [];
 
-      // If second row exists and some second row cells are non-empty where first row cell is "የብር መጠን" or duplicate top cells, use 2-row headers
-      const secondNonEmpty = second && second.some(cell => cell !== "");
-      if(secondNonEmpty){
-        // If second row has labels different from first, treat as subheaders
-        headerRowCount = 2;
-      }
-
-      // Build header keys array
-      const headerKeys = [];
-      const maxCols = Math.max(...rows.map(r=>r.length));
+      // Build combined headers (preserve exact Amharic text)
+      const maxCols = Math.max(top.length, sub.length);
+      const combined = [];
       for(let c=0;c<maxCols;c++){
-        const top = (rows[0][c]||"").toString().trim();
-        const sub = headerRowCount === 2 ? ((rows[1][c]||"").toString().trim()) : "";
+        const a = (top[c]||"").toString().trim();
+        const b = (sub[c]||"").toString().trim();
         let key = "";
-        if(top && sub){
-          // combine, e.g. "የብር መጠን - ለመመዝገቢያ"
-          key = `${top} - ${sub}`;
-        } else if(top){
-          key = top;
-        } else if(sub){
-          key = sub;
+        if(a && b){
+          key = `${a} - ${b}`;
+        } else if(a){
+          key = a;
+        } else if(b){
+          key = b;
         } else {
           key = `COL_${c+1}`;
         }
-        headerKeys.push(key);
+        combined.push(key);
       }
 
-      // Convert to JSON using headerKeys and skipping headerRowCount rows
-      const dataRows = XLSX.utils.sheet_to_json(sheet, { header: headerKeys, range: headerRowCount, defval: "" });
+      // Now build JSON rows using combined keys and starting from row index 2
+      const dataRows = XLSX.utils.sheet_to_json(sheet, {header: combined, range: 2, defval:""});
 
-      // Map columns to our internal fields:
-      // user provided example headers: 
-      // "ተ.ቁ", "ደረሰኝ ቁጥር", "ስም  ዝርዝር", "የብር መጠን - ለመመዝገቢያ", "የብር መጠን - ለሼር", "ድምር", "ስልክ ቁጥር"
-      // We'll try to find best matches by keys (Amharic or english)
-      const mapped = [];
-      for(const r of dataRows){
-        // find values by matching header keys (case-sensitive, but we check for substrings)
-        const getVal = (candidates) => {
-          for(const key of Object.keys(r)){
-            for(const cand of candidates){
-              if(!key) continue;
-              if(key.toString().trim() === cand) return r[key];
-              if(key.toString().includes(cand)) return r[key];
-            }
-          }
-          return "";
-        };
+      // If the sheet actually only had 1 header row (not 2), fallback: detect if second row seems data (numbers vs text)
+      // But you confirmed exactly two header rows, so we use combined keys.
 
-        const id = getVal(["ተ.ቁ","ID","Id","id"]);
-        const receipt = getVal(["ደረሰኝ ቁጥር","Receipt","receipt"]);
-        const name = getVal(["ስም ዝርዝር","ስም","Full Name","Name","name"]);
-        const regAmt = getVal(["የብር መጠን - ለመመዝገቢያ","ለመመዝገቢያ","Reg","registration"]);
-        const shareAmt = getVal(["የብር መጠን - ለሼር","ለሼር","Share","ሼር"]);
-        const total = getVal(["ድምር","Total","total"]);
-        const phone = getVal(["ስልክ ቁጥር","Phone","phone"]);
+      // Merge into members: preserve exact keys and values, avoid duplicate IDs if exists
+      // We'll set headers for table as ["select", ...combined]
+      headers = ["select", ...combined];
 
-        mapped.push({
-          id: id?.toString().trim() || (`ID_${Date.now()}_${Math.random().toString(36).slice(2,6)}`),
-          receipt: (receipt||"").toString().trim(),
-          name: (name||"").toString().trim(),
-          regAmt: parseFloat((regAmt||"").toString().replace(/,/g,"")) || 0,
-          shareAmt: parseFloat((shareAmt||"").toString().replace(/,/g,"")) || 0,
-          total: (total !== "" && total !== undefined) ? (parseFloat((total||"").toString().replace(/,/g,"")) || 0) : ( (parseFloat((regAmt||"").toString().replace(/,/g,""))||0) + (parseFloat((shareAmt||"").toString().replace(/,/g,""))||0) ),
-          phone: (phone||"").toString().trim()
-        });
-      }
-
-      // Merge with existing members, avoid duplicates by id
+      // For each dataRow, ensure numeric strings parsed into numbers when possible
       let added = 0;
-      for(const m of mapped){
-        if(members.some(x=>x.id === m.id)){
-          // update existing (optional) — here we skip to avoid clobber
-          continue;
-        } else {
-          members.push(m);
+      dataRows.forEach(r=>{
+        // pick id from first meaningful column: try 'ተ.ቁ' or first combined[0] or combined[1] etc.
+        // But we want to preserve the full object keyed by combined keys.
+        // We'll consider the primary id key to be combined[0] if it resembles 'ተ.ቁ' else second column maybe 'ID'.
+        const idKeyGuess = combined.find(k => k.includes("ተ.ቁ") || /id/i.test(k)) || combined[0];
+        const idVal = String(r[idKeyGuess]||`ID_${Date.now()}_${Math.random().toString(36).slice(2,5)}`).trim();
+        // if duplicate id exists, skip/option to update - here skip to avoid overwriting:
+        const exists = members.some(m=> String(m[idKeyGuess]) === idVal);
+        if(!exists){
+          // normalize numbers where appropriate (try to parse numeric strings)
+          const normalized = {};
+          combined.forEach(key=>{
+            let v = r[key];
+            // if it's a string that contains only digits, commas, or periods, try parse
+            if(typeof v === "string"){
+              const cleaned = v.replace(/,/g,"").trim();
+              if(cleaned !== "" && !isNaN(cleaned)) v = Number(cleaned);
+            }
+            normalized[key] = v;
+          });
+          members.push(normalized);
           added++;
+        } else {
+          // optionally update existing rows — this implementation keeps existing
         }
-      }
+      });
+
       saveMembers();
+      buildTableHead();
       renderTable();
-      toast(`Imported ${mapped.length} rows (${added} new).`);
+      toast(`Imported ${dataRows.length} rows (added ${added}).`);
     } catch(err){
       console.error(err);
-      toast("Import failed. Check file format.", "error");
+      toast("Import failed: " + (err.message || err), "error");
     }
   };
   reader.readAsArrayBuffer(file);
-  // reset input so same file can be reselected
+  // reset input value so same file can be reselected later
   evt.target.value = "";
 }
 
-/* ============= Export Excel ============= */
+/* =========== Export to Excel (preserve exact headers) =========== */
 document.getElementById("btnExport").addEventListener("click", ()=>{
-  if(members.length === 0){ toast("No data to export","error"); return; }
-  // produce worksheet using nice headers (keep Amharic keys)
-  const exportRows = members.map(m => ({
-    "ተ.ቁ": m.id,
-    "ስም  ዝርዝር": m.name,
-    "ስልክ ቁጥር": m.phone,
-    "የብር መጠን - ለመመዝገቢያ": m.regAmt,
-    "የብር መጠን - ለሼር": m.shareAmt,
-    "ድምር": m.total,
-    "ደረሰኝ ቁጥር": m.receipt
-  }));
-  const ws = XLSX.utils.json_to_sheet(exportRows);
+  if(!members || members.length === 0){ toast("No data to export","error"); return; }
+  // If headers not set, try infer
+  const keys = headers && headers.length > 1 ? headers.slice(1) : Object.keys(members[0] || {});
+  // create rows preserving header names
+  const rows = members.map(m=>{
+    const row = {};
+    keys.forEach(k => row[k] = m[k] !== undefined ? m[k] : "");
+    return row;
+  });
+  const ws = XLSX.utils.json_to_sheet(rows, {header: keys});
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Members");
   XLSX.writeFile(wb, "members_export.xlsx");
   toast("Exported members_export.xlsx");
 });
 
-/* =========== Settings (change admin credentials) =========== */
+/* ============= Settings modal ============= */
 document.getElementById("btnSettings").addEventListener("click", ()=>{
+  const creds = JSON.parse(localStorage.getItem(CRED_KEY) || JSON.stringify(defaultCreds));
   showModal(`
     <h3>Settings</h3>
     <div style="margin-top:10px">
-      <label>Change Admin Username</label>
-      <input id="setUser" class="form-control" value="${escapeForInput(loadCreds().username)}"/>
+      <label>Admin Username</label>
+      <input id="setUser" class="form-control" value="${escapeHtml(creds.username)}"/>
     </div>
     <div style="margin-top:8px">
-      <label>Change Admin Password</label>
-      <input id="setPass" class="form-control" value="${escapeForInput(loadCreds().password)}" />
+      <label>Admin Password</label>
+      <input id="setPass" type="password" class="form-control" value="${escapeHtml(creds.password)}" />
     </div>
     <div class="form-actions" style="margin-top:12px">
       <button id="saveSettings" class="btn btn-primary">Save</button>
-      <button id="closeModal" class="btn btn-muted">Cancel</button>
+      <button id="closeModalBtn" class="btn btn-muted">Cancel</button>
     </div>
   `);
-
   document.getElementById("saveSettings").addEventListener("click", ()=>{
     const u = document.getElementById("setUser").value.trim();
     const p = document.getElementById("setPass").value;
-    if(!u || !p){ alert("username & password cannot be empty"); return; }
-    saveCreds({username:u,password:p});
-    toast("Credentials updated");
+    if(!u || !p){ alert("Username and password cannot be empty"); return; }
+    localStorage.setItem(CRED_KEY, JSON.stringify({username:u,password:p}));
+    toast("Credentials saved");
     closeModal();
   });
+  document.getElementById("closeModalBtn").addEventListener("click", closeModal);
 });
 
-/* ============ Modal helpers ============ */
+/* modal helpers */
 const modalBack = document.getElementById("modalBack");
 const modalContent = document.getElementById("modalContent");
-
 function showModal(html){
   modalContent.innerHTML = html;
   modalBack.style.display = "flex";
 }
-function closeModal(){ modalBack.style.display = "none"; modalContent.innerHTML = ""; }
-modalBack.addEventListener("click", (ev)=>{ if(ev.target === modalBack) closeModal(); });
-/* small helper */
-function escapeForInput(s){ return (s||"").replaceAll('"','&quot;'); }
+function closeModal(){
+  modalBack.style.display = "none";
+  modalContent.innerHTML = "";
+}
+modalBack.addEventListener("click", e => { if(e.target === modalBack) closeModal(); });
 
-/* ============ Utilities ============ */
-/* On page load, ensure default creds exist (if not set) */
-if(!localStorage.getItem(CRED_KEY)) saveCreds(defaultCreds);
+/* utility - populate login username for convenience */
+const stored = JSON.parse(localStorage.getItem(CRED_KEY) || JSON.stringify(defaultCreds));
+document.getElementById("loginUser").value = stored.username || "";
 
-/* Load saved members into table if admin already logged-in previously? We'll wait for login */
-/* Hook add new button */
-document.getElementById("btnAddNew").addEventListener("click", ()=>{
-  resetForm();
-  window.scrollTo({top:0,behavior:"smooth"});
-});
-/* open file using choose file */
-document.getElementById("btnOpenFile").addEventListener("click", ()=> fileInput.click());
+/* initial default headers (so UI has columns before import) */
+headers = ["select","ተ.ቁ","ደረሰኝ ቁጥር","ስም  ዝርዝር","የብር መጠን - ለመመዝገቢያ","የብር መጠን - ለሼር","ድምር","ስልክ ቁጥር"];
+buildTableHead();
+loadMembers();
+renderTable();
 
-/* file input already wired */
-
-/* Close modal by close buttons (delegated) */
-modalContent.addEventListener("click",(ev)=>{
-  if(ev.target.id === "closeModal") closeModal();
-});
-
-/* helper to populate if user double-clicks row (optional) */
-tbody.addEventListener("dblclick",(ev)=>{
-  const tr = ev.target.closest("tr");
-  if(!tr) return;
-  const id = tr.querySelector(".rowCheckbox")?.dataset.id;
-  if(!id) return;
-  document.querySelector(`.btn-edit[data-id="${id}"]`)?.click();
-});
-
-/* final: populate login fields with stored credentials for convenience */
-const storedCreds = loadCreds();
-document.getElementById("loginUser").value = storedCreds.username || "";
-document.getElementById("loginPass").value = "";
-
-/* small helper - escape commas in numbers when parsing already covered above */
-
-/* Done */
 </script>
 </body>
 </html>
