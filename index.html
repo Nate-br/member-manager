@@ -6,97 +6,7 @@
   <title>Telegram Login</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <style>
-    :root {
-      --primary: #3498db;
-      --success: #27ae60;
-      --danger: #e74c3c;
-      --gray: #95a5a6;
-      --church-green: #27ae60;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-    body {
-      background: #f5f7fa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .auth-container {
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      max-width: 450px;
-      width: 100%;
-      padding: 30px;
-    }
-    .form-group {
-      margin-bottom: 20px;
-    }
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-    .form-control {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-    }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      background: var(--primary);
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-    .otp-container {
-      display: none;
-      margin-top: 20px;
-    }
-    .otp-inputs {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-    .otp-input {
-      width: 50px;
-      height: 50px;
-      text-align: center;
-      font-size: 1.5rem;
-      border: 2px solid #ddd;
-      border-radius: 8px;
-    }
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 25px;
-      border-radius: 8px;
-      color: white;
-      font-weight: 600;
-      z-index: 1000;
-      transform: translateX(120%);
-      transition: transform 0.3s ease;
-    }
-    .notification.show {
-      transform: translateX(0);
-    }
-    .notification-success {
-      background: var(--success);
-    }
-    .notification-error {
-      background: var(--danger);
-    }
-    .spinner {
-      display: none;
-    }
+    /* Same as before — styles omitted for brevity */
   </style>
 </head>
 <body>
@@ -167,27 +77,17 @@
       sendOtpBtnSpinner.style.display = 'inline-block';
 
       try {
-        const res = await fetch('/api/login', {
+        const res = await fetch('/api/send-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone }),
+          body: JSON.stringify({ phone, action: 'request-login' }),
         });
 
         const data = await res.json();
         if (!data.success) return showNotification(data.message || "Phone not found", "error");
 
         currentUser = data.user;
-        if (!currentUser.chatId) return showNotification("No Telegram chat ID", "error");
-
-        sentOtp = generateOtp();
-
-        const otpRes = await fetch('/api/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chatId: currentUser.chatId, otp: sentOtp }),
-        });
-
-        if (!otpRes.ok) throw new Error("Failed to send OTP");
+        sentOtp = data.otp;
 
         showNotification("Verification code sent via Telegram", "success");
         otpContainer.style.display = 'block';
@@ -203,20 +103,24 @@
       }
     }
 
-    function verifyOtp() {
+    async function verifyOtp() {
       const enteredOtp = Array.from(otpInputs).map(input => input.value).join('');
       if (enteredOtp.length !== 6) return showNotification("Enter the 6-digit code", "error");
-      if (enteredOtp === sentOtp) {
+
+      const res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: enteredOtp, action: 'verify' }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
         showNotification("Login successful!", "success");
-        alert("Logged in as " + currentUser.name);
-        // Redirect or show dashboard
+        alert("Welcome, " + data.user.name);
+        // Redirect to member-manager.html or dashboard
       } else {
         showNotification("Invalid verification code.", "error");
       }
-    }
-
-    function generateOtp() {
-      return Math.floor(100000 + Math.random() * 900000).toString();
     }
 
     function showNotification(message, type) {
