@@ -211,6 +211,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       font-size: 0.9rem;
+      margin: 0.2rem;
     }
 
     .edit:hover {
@@ -270,6 +271,66 @@
       color: #7f8c8d;
       font-size: 0.9rem;
       margin-top: 2rem;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: none;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-family: 'Noto Sans Ethiopic', sans-serif;
+    }
+
+    .form-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
     }
 
     @media (max-width: 768px) {
@@ -368,6 +429,21 @@
     </div>
   </div>
 
+  <!-- Edit Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>አባል አርትዕ</h2>
+      <form id="editForm">
+        <div id="formFields"></div>
+        <div class="form-buttons">
+          <button type="button" onclick="closeEditModal()">ביטול</button>
+          <button type="submit">አስቀምጥ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="footer">
     <p>የአባላት ቁጠባ አስተዳደር ስርዓት © 2023</p>
   </div>
@@ -375,8 +451,20 @@
   <script>
     let tableData = [];
     let headers = [];
+    let currentEditIndex = -1;
 
     document.getElementById('excelFile').addEventListener('change', handleFile);
+
+    // Close modal when clicking on X
+    document.querySelector('.close').addEventListener('click', closeEditModal);
+
+    // Close modal when clicking outside of it
+    window.addEventListener('click', function(event) {
+      const modal = document.getElementById('editModal');
+      if (event.target === modal) {
+        closeEditModal();
+      }
+    });
 
     function handleFile(e) {
       const file = e.target.files[0];
@@ -389,54 +477,48 @@
           const workbook = XLSX.read(data, { type: 'array', cellDates: true });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           
-          // Get the range of the sheet
-          const range = XLSX.utils.decode_range(sheet['!ref']);
+          // Convert sheet to JSON with headers
+          const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
           
-          // Extract headers (first row)
-          headers = [];
-          for (let C = range.s.c; C <= range.e.c; ++C) {
-            const address = XLSX.utils.encode_cell({r: range.s.r, c: C});
-            const cell = sheet[address];
-            let header = cell ? cell.v : "";
-            
-            // Clean header names
-            if (typeof header === 'string') {
-              header = header.trim();
-            } else if (typeof header === 'number') {
-              header = header.toString();
-            } else {
-              header = "";
-            }
-            
-            // Remove any ID-like prefixes
-            header = header.replace(/^ID_\d+_/, '');
-            
-            headers.push(header || `Column ${C + 1}`);
-          }
-          
-          // Extract data (rows after header)
-          const jsonData = XLSX.utils.sheet_to_json(sheet, { 
-            header: 1,
-            range: {s: {r: range.s.r + 1, c: range.s.c}, e: range.e}
-          });
-          
-          // Process data rows
-          tableData = jsonData.map(row => {
-            const obj = {};
-            headers.forEach((h, i) => {
-              let value = row[i];
-              // Handle different data types
-              if (value === null || value === undefined) {
-                value = "";
-              } else if (typeof value === 'object') {
-                value = JSON.stringify(value);
-              } else {
-                value = value.toString();
+          // Process headers (first row)
+          if (jsonData.length > 0) {
+            headers = jsonData[0].map(header => {
+              if (typeof header === 'string') {
+                // Remove ID prefixes and clean header
+                return header.replace(/^ID_\d+_/, '').trim();
               }
-              obj[h] = value;
+              return header ? header.toString() : '';
             });
-            return obj;
-          });
+            
+            // Process data rows
+            tableData = [];
+            for (let i = 1; i < jsonData.length; i++) {
+              const row = jsonData[i];
+              const rowData = {};
+              
+              headers.forEach((header, index) => {
+                let value = row[index];
+                
+                // Handle different data types
+                if (value === null || value === undefined) {
+                  value = '';
+                } else if (typeof value === 'object') {
+                  value = JSON.stringify(value);
+                } else {
+                  value = value.toString();
+                }
+                
+                // Remove ID prefixes from data values
+                if (typeof value === 'string') {
+                  value = value.replace(/^ID_\d+_/, '');
+                }
+                
+                rowData[header] = value;
+              });
+              
+              tableData.push(rowData);
+            }
+          }
           
           renderTable();
         } catch (error) {
@@ -475,7 +557,7 @@
         
         const tdAction = document.createElement("td");
         tdAction.innerHTML = `
-          <button class="edit" onclick="editRow(${idx})">አርትዕ</button>
+          <button class="edit" onclick="openEditModal(${idx})">አርትዕ</button>
           <button class="delete" onclick="deleteRow(${idx})">ሰርዝ</button>`;
         tr.appendChild(tdAction);
         tbody.appendChild(tr);
@@ -516,13 +598,50 @@
       renderTable();
     }
 
-    function editRow(index) {
+    function openEditModal(index) {
+      currentEditIndex = index;
       const row = tableData[index];
+      
+      const formFields = document.getElementById('formFields');
+      formFields.innerHTML = '';
+      
       headers.forEach(h => {
-        const val = prompt(`${h}:`, row[h]);
-        if (val !== null) row[h] = val;
+        const div = document.createElement('div');
+        div.className = 'form-group';
+        div.innerHTML = `
+          <label>${h}:</label>
+          <input type="text" value="${row[h] || ''}" data-header="${h}">
+        `;
+        formFields.appendChild(div);
       });
+      
+      document.getElementById('editModal').style.display = 'block';
+      
+      // Handle form submission
+      document.getElementById('editForm').onsubmit = function(e) {
+        e.preventDefault();
+        saveEdit();
+      };
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+      currentEditIndex = -1;
+    }
+
+    function saveEdit() {
+      if (currentEditIndex === -1) return;
+      
+      const row = tableData[currentEditIndex];
+      const inputs = document.querySelectorAll('#formFields input');
+      
+      inputs.forEach(input => {
+        const header = input.getAttribute('data-header');
+        row[header] = input.value;
+      });
+      
       renderTable();
+      closeEditModal();
     }
 
     function deleteRow(index) {
