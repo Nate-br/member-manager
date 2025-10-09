@@ -1,296 +1,644 @@
 <!DOCTYPE html>
-<html lang="am">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>የአባላት ቁጠባ አስተዳደር</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Member Savings Manager — Admin</title>
+
+  <!-- Font Awesome + XLSX -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic&display=swap" rel="stylesheet">
+
   <style>
-    body {
-      font-family: 'Noto Sans Ethiopic', sans-serif;
-      background: #f3f5f9;
-      margin: 0;
-      padding: 0;
-      color: #222;
+    :root{
+      --primary:#1266f1;
+      --muted:#6b7280;
+      --success:#16a34a;
+      --danger:#dc2626;
+      --card:#ffffff;
+      --bg: linear-gradient(135deg,#f5f7fb,#e6eef9);
+      --radius:12px;
     }
-
-    header {
-      background: #2c3e50;
-      color: white;
-      text-align: center;
-      padding: 1rem 0;
-      font-size: 1.5rem;
-      font-weight: bold;
-      letter-spacing: 0.5px;
+    *{box-sizing:border-box;font-family:"Noto Sans Ethiopic","Segoe UI",Segoe,Arial,sans-serif}
+    body{margin:0;background:var(--bg);padding:28px;color:#0f172a}
+    .frame{max-width:1200px;margin:0 auto}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:0 6px 24px rgba(15,23,42,0.06);padding:18px}
+    header.appbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+    header.appbar .title{display:flex;flex-direction:column}
+    header.appbar h1{margin:0;font-size:1.25rem;color:var(--primary)}
+    header.appbar p{margin:0;color:var(--muted);font-size:0.9rem}
+    .actions{display:flex;gap:8px;align-items:center}
+    .btn{border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-muted{background:#eef2ff;color:var(--primary)}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-success{background:var(--success);color:#fff}
+    .grid{display:grid;grid-template-columns: 1fr 410px;gap:18px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .panel{display:flex;flex-direction:column;gap:12px}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    label{font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px}
+    input.form-control, select.form-control, textarea.form-control{
+      width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ef;font-size:0.95rem;background:#fff
     }
-
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin: 1rem auto;
-      text-align: center;
-      flex-wrap: wrap;
-    }
-
-    .stat {
-      background: white;
-      border-radius: 10px;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      font-weight: bold;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 950px;
-      margin: 1rem auto;
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    button {
-      background: #2c3e50;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #34495e;
-    }
-
-    input[type="file"] {
-      display: none;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      text-align: left;
-      padding: 0.5rem;
-      word-break: break-word;
-    }
-    th {
-      background: #ecf0f1;
-      font-weight: bold;
-    }
-    tr:nth-child(even) {
-      background: #fafafa;
-    }
-
-    .edit, .delete {
-      background: #3498db;
-      color: white;
-      border: none;
-      padding: 0.3rem 0.6rem;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .delete {
-      background: #e74c3c;
-    }
-
-    .settings {
-      text-align: right;
-      margin-top: 1rem;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    @media (max-width: 600px) {
-      .controls {
-        flex-direction: column;
-      }
-      .stat {
-        width: 100%;
-      }
-    }
+    .small{font-size:0.85rem;color:var(--muted)}
+    .table-wrap{overflow:auto;border-radius:10px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f1f5f9}
+    th{background:#fbfdff;color:var(--muted);font-weight:700;position:sticky;top:0}
+    tr:hover{background:#fbfbfd}
+    .muted{color:var(--muted)}
+    .controls{display:flex;gap:8px;align-items:center}
+    .top-controls{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+    .search{flex:1;display:flex;gap:8px}
+    .search input{flex:1}
+    .checkbox-center{text-align:center}
+    .footer-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+    /* modal */
+    .modal-back{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;z-index:1200}
+    .modal{background:#fff;border-radius:12px;padding:18px;min-width:320px;max-width:720px;box-shadow:0 8px 40px rgba(2,6,23,0.2)}
+    .row{display:flex;gap:8px}
+    .form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .note{font-size:0.85rem;color:var(--muted)}
   </style>
 </head>
 <body>
-  <header>የአባላት ቁጠባ አስተዳደር</header>
-
-  <div class="stats">
-    <div class="stat" id="memberCount">የአባላት ጠቅላላ ብዛት: 0</div>
-    <div class="stat" id="totalMoney">ጠቅላላ የብር መጠን: 0 ብር</div>
-  </div>
-
-  <div class="container">
-    <div class="controls">
-      <label for="excelFile" class="btn">
-        <button>📂 Excel አስመጣ</button>
-      </label>
-      <input type="file" id="excelFile" accept=".xlsx, .xls" />
-      <button onclick="addRow()">➕ አባል አክል</button>
-      <button onclick="exportExcel()">📤 Excel ወደ ውጭ አውጣ</button>
-      <button onclick="openSettings()">⚙️ ቅንብሮች</button>
+  <div class="frame">
+    <!-- Admin login card -->
+    <div id="loginView" class="card" style="max-width:520px;margin:0 auto">
+      <header class="appbar">
+        <div class="title">
+          <h1>Member Savings Manager (Admin)</h1>
+          <p>Vision for a Better Life</p>
+        </div>
+      </header>
+      <form id="loginForm" class="panel">
+        <div>
+          <label>Username</label>
+          <input id="loginUser" class="form-control" value="" autocomplete="username" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="loginPass" type="password" class="form-control" autocomplete="current-password" />
+        </div>
+        <div class="footer-actions">
+          <button class="btn btn-primary" type="submit"><i class="fa fa-lock"></i> Login</button>
+        </div>
+        <p class="note">Default credentials: <strong>admin / admin123</strong>. Change them in Settings after login.</p>
+      </form>
     </div>
 
-    <table id="memberTable">
-      <thead>
-        <tr id="tableHead"></tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+    <!-- Main app -->
+    <div id="appView" style="display:none">
+      <div class="card">
+        <header class="appbar">
+          <div class="title">
+            <h1>Member Savings Manager</h1>
+            <p>Manage members — Excel import supports Amharic headers & two-row headers (e.g., የብር መጠን with ለመመዝገቢያ & ለሼር)</p>
+          </div>
+          <div class="actions">
+            <button id="btnImport" class="btn btn-muted"><i class="fa fa-file-import"></i> Import Excel</button>
+            <button id="btnExport" class="btn btn-primary"><i class="fa fa-file-export"></i> Export Excel</button>
+            <button id="btnSettings" class="btn btn-muted"><i class="fa fa-cog"></i> Settings</button>
+            <button id="btnLogout" class="btn btn-danger"><i class="fa fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </header>
 
-    <div class="settings hidden" id="settingsBox">
-      <h3>⚙️ የአድሚን ቅንብሮች</h3>
-      <label>የተጠቃሚ ስም: <input id="username" placeholder="username"></label><br><br>
-      <label>የይለፍ ቃል: <input id="password" type="password" placeholder="password"></label><br><br>
-      <button onclick="saveSettings()">💾 አስቀምጥ</button>
+        <div class="grid">
+          <!-- Left: table and controls -->
+          <div class="panel">
+            <div class="card" style="padding:12px">
+              <div class="top-controls">
+                <div class="search">
+                  <input id="searchBox" class="form-control" placeholder="Search ID, name, phone or Amharic text..." />
+                </div>
+                <div class="controls">
+                  <button id="btnBulkDelete" class="btn btn-danger"><i class="fa fa-trash"></i> Delete</button>
+                  <button id="btnAddNew" class="btn btn-success"><i class="fa fa-plus"></i> Add</button>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table id="membersTable" >
+                  <thead>
+                    <tr>
+                      <th style="width:40px"><input id="selectAll" type="checkbox"/></th>
+                      <th>ID</th>
+                      <th>ስም ዝርዝር</th>
+                      <th>ስልክ ቁጥር</th>
+                      <th>የብር መጠን - ለመመዝገቢያ</th>
+                      <th>የብር መጠን - ለሼር</th>
+                      <th>ድምር</th>
+                      <th>ደረሰኝ ቁጥር</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="note" style="margin-top:8px">Tip: Import Excel with either 1 header row or 2 header rows (top + subheaders). Subcolumns under "የብር መጠን" like "ለመመዝገቢያ" and "ለሼር" are handled.</div>
+            </div>
+          </div>
+
+          <!-- Right: form for add/edit and column mapping -->
+          <div class="card panel">
+            <h3 style="margin:0 0 8px 0">Add / Edit Member</h3>
+            <form id="memberForm" class="panel">
+              <div><label>ተ.ቁ (ID)</label><input id="inputId" class="form-control" required></div>
+              <div><label>ስም ዝርዝር (Full name)</label><input id="inputName" class="form-control" required></div>
+              <div><label>ስልክ ቁጥር (Phone)</label><input id="inputPhone" class="form-control"></div>
+              <div class="form-row">
+                <div>
+                  <label>የብር መጠን - ለመመዝገቢያ</label>
+                  <input id="inputRegAmt" class="form-control" type="number" step="0.01" />
+                </div>
+                <div>
+                  <label>የብር መጠን - ለሼር</label>
+                  <input id="inputShareAmt" class="form-control" type="number" step="0.01" />
+                </div>
+              </div>
+              <div><label>ድምር (Total)</label><input id="inputTotal" class="form-control" readonly></div>
+              <div><label>ደረሰኝ ቁጥር (Receipt No.)</label><input id="inputReceipt" class="form-control"></div>
+
+              <div class="form-actions">
+                <button id="saveMemberBtn" type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                <button id="resetFormBtn" type="button" class="btn btn-muted">Reset</button>
+              </div>
+            </form>
+
+            <hr />
+            <h4 style="margin:0 0 6px 0">Import / Column Mapping</h4>
+            <div class="note">If your Excel headers differ, you can edit keys after import in the table (edit row).</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="btnOpenFile" class="btn btn-muted"><i class="fa fa-upload"></i> Choose File</button>
+              <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="toast" style="position:fixed;top:18px;right:18px;display:none;z-index:1400"></div>
+  </div>
+
+  <!-- modals: settings & confirm -->
+  <div id="modalBack" class="modal-back">
+    <div class="modal card" id="modalContent" role="dialog" aria-modal="true">
+      <!-- content injected dynamically -->
     </div>
   </div>
 
-  <script>
-    let tableData = [];
-    let headers = [];
+<script>
+/* ============= Data & Storage ============= */
+const STORAGE_KEY = "mv_members_v1";
+const CRED_KEY = "mv_admin_v1";
 
-    document.getElementById('excelFile').addEventListener('change', handleFile);
+let members = [];
+let editingId = null;
 
-    function handleFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array', codepage: 65001 });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+/* default admin credentials (can be changed in settings) */
+const defaultCreds = { username: "admin", password: "admin123" };
+function loadCreds(){
+  const raw = localStorage.getItem(CRED_KEY);
+  return raw ? JSON.parse(raw) : defaultCreds;
+}
+function saveCreds(creds){
+  localStorage.setItem(CRED_KEY, JSON.stringify(creds));
+}
 
-        // Merge double headers
-        if (json.length > 1) {
-          const header1 = json[0];
-          const header2 = json[1];
-          headers = header1.map((h, i) => {
-            const sub = header2[i] ? header2[i].trim() : "";
-            if (sub && sub !== "") return `${h.trim()} - ${sub}`;
-            return h.trim();
-          });
-          json = json.slice(2);
-        } else {
-          headers = json[0];
-          json = json.slice(1);
-        }
+/* load/save members */
+function loadMembers(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  members = raw ? JSON.parse(raw) : [];
+}
+function saveMembers(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
+}
 
-        // Filter invalid headers
-        headers = headers.filter(h => h && !/^col_\d+$/i.test(h));
+/* ====== UI helpers ====== */
+function toast(msg, type = "success"){
+  const t = document.getElementById("toast");
+  t.innerHTML = `<div class="card" style="padding:12px;border-radius:10px;${type==='success'?'border-left:4px solid var(--success);':'border-left:4px solid var(--danger);'}">${msg}</div>`;
+  t.style.display = "block";
+  setTimeout(()=> t.style.display = "none", 2800);
+}
 
-        tableData = json.map(row => {
-          const obj = {};
-          headers.forEach((h, i) => obj[h] = row[i] || "");
-          return obj;
-        });
+/* ====== Render Table ====== */
+const tbody = document.querySelector("#membersTable tbody");
+function renderTable(list = members){
+  tbody.innerHTML = "";
+  if(!Array.isArray(list)) list = [];
+  list.forEach(m=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="checkbox-center"><input class="rowCheckbox" type="checkbox" data-id="${escapeHtml(m.id)}"></td>
+      <td>${escapeHtml(m.id)}</td>
+      <td>${escapeHtml(m.name)}</td>
+      <td>${escapeHtml(m.phone||"")}</td>
+      <td>${formatNumber(m.regAmt)}</td>
+      <td>${formatNumber(m.shareAmt)}</td>
+      <td>${formatNumber(m.total)}</td>
+      <td>${escapeHtml(m.receipt||"")}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-muted btn-edit" data-id="${escapeHtml(m.id)}"><i class="fa fa-edit"></i></button>
+          <button class="btn btn-danger btn-delete" data-id="${escapeHtml(m.id)}"><i class="fa fa-trash"></i></button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-        renderTable();
-      };
-      reader.readAsArrayBuffer(file);
+/* utility */
+function formatNumber(v){
+  if(v===undefined||v===null||v==="") return "";
+  const n = Number(v);
+  if(isNaN(n)) return v;
+  return new Intl.NumberFormat().format(n);
+}
+function escapeHtml(s){
+  if(s===undefined||s===null) return "";
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
+
+/* ====== Login / App flow ====== */
+const loginView = document.getElementById("loginView");
+const appView = document.getElementById("appView");
+const loginForm = document.getElementById("loginForm");
+
+function openApp(){
+  loginView.style.display = "none";
+  appView.style.display = "block";
+  loadMembers();
+  renderTable();
+}
+function closeApp(){
+  loginView.style.display = "";
+  appView.style.display = "none";
+}
+
+loginForm.addEventListener("submit", (ev)=>{
+  ev.preventDefault();
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value;
+  const creds = loadCreds();
+  if(u === creds.username && p === creds.password){
+    openApp();
+    toast("Welcome, " + creds.username, "success");
+  } else {
+    toast("Invalid credentials", "error");
+  }
+});
+
+/* logout */
+document.getElementById("btnLogout").addEventListener("click", ()=>{
+  if(!confirm("Logout?")) return;
+  closeApp();
+});
+
+/* ========== Add / Edit Member ========== */
+const memberForm = document.getElementById("memberForm");
+const inputId = document.getElementById("inputId");
+const inputName = document.getElementById("inputName");
+const inputPhone = document.getElementById("inputPhone");
+const inputRegAmt = document.getElementById("inputRegAmt");
+const inputShareAmt = document.getElementById("inputShareAmt");
+const inputTotal = document.getElementById("inputTotal");
+const inputReceipt = document.getElementById("inputReceipt");
+const saveMemberBtn = document.getElementById("saveMemberBtn");
+const resetFormBtn = document.getElementById("resetFormBtn");
+
+function computeTotal(){
+  const a = parseFloat(inputRegAmt.value) || 0;
+  const b = parseFloat(inputShareAmt.value) || 0;
+  inputTotal.value = (a + b).toFixed(2);
+}
+
+inputRegAmt.addEventListener("input", computeTotal);
+inputShareAmt.addEventListener("input", computeTotal);
+
+memberForm.addEventListener("submit", (ev)=>{
+  ev.preventDefault();
+  const id = inputId.value.trim();
+  if(!id){ toast("ID required", "error"); return; }
+  const payload = {
+    id,
+    name: inputName.value.trim(),
+    phone: inputPhone.value.trim(),
+    regAmt: parseFloat(inputRegAmt.value) || 0,
+    shareAmt: parseFloat(inputShareAmt.value) || 0,
+    total: parseFloat(inputTotal.value) || ((parseFloat(inputRegAmt.value)||0)+(parseFloat(inputShareAmt.value)||0)),
+    receipt: inputReceipt.value.trim()
+  };
+  if(editingId && editingId === id){
+    const idx = members.findIndex(x=>x.id === editingId);
+    if(idx !== -1){
+      members[idx] = payload;
+      toast("Member updated");
     }
-
-    function renderTable() {
-      const thead = document.getElementById("tableHead");
-      const tbody = document.getElementById("tableBody");
-      thead.innerHTML = "";
-      tbody.innerHTML = "";
-
-      headers.forEach(h => {
-        const th = document.createElement("th");
-        th.textContent = h;
-        thead.appendChild(th);
-      });
-      const thAction = document.createElement("th");
-      thAction.textContent = "እርምጃ";
-      thead.appendChild(thAction);
-
-      tableData.forEach((row, idx) => {
-        const tr = document.createElement("tr");
-        headers.forEach(h => {
-          const td = document.createElement("td");
-          td.textContent = row[h];
-          tr.appendChild(td);
-        });
-        const tdAction = document.createElement("td");
-        tdAction.innerHTML = `
-          <button class="edit" onclick="editRow(${idx})">Edit</button>
-          <button class="delete" onclick="deleteRow(${idx})">Del</button>`;
-        tr.appendChild(tdAction);
-        tbody.appendChild(tr);
-      });
-
-      updateStats();
+  } else {
+    if(members.some(x=>x.id === id)){
+      toast("Member ID already exists", "error");
+      return;
     }
+    members.push(payload);
+    toast("Member added");
+  }
+  saveMembers();
+  renderTable();
+  resetForm();
+});
 
-    function updateStats() {
-      document.getElementById("memberCount").textContent = "የአባላት ጠቅላላ ብዛት: " + tableData.length;
-      let total = 0;
-      tableData.forEach(r => {
-        const val = parseFloat(r["ድምር"]);
-        if (!isNaN(val)) total += val;
-      });
-      document.getElementById("totalMoney").textContent = "ጠቅላላ የብር መጠን: " + total.toLocaleString() + " ብር";
-    }
+resetFormBtn.addEventListener("click", resetForm);
 
-    function addRow() {
-      const newRow = {};
-      headers.forEach(h => newRow[h] = "");
-      tableData.push(newRow);
-      renderTable();
-    }
+function resetForm(){
+  editingId = null;
+  memberForm.reset();
+  inputTotal.value = "";
+  inputId.disabled = false;
+  saveMemberBtn.innerHTML = `<i class="fa fa-save"></i> Save`;
+}
 
-    function editRow(index) {
-      const row = tableData[index];
-      headers.forEach(h => {
-        const val = prompt(`${h}:`, row[h]);
-        if (val !== null) row[h] = val;
-      });
-      renderTable();
-    }
+/* edit / delete actions delegated from table */
+tbody.addEventListener("click", (ev)=>{
+  const editBtn = ev.target.closest(".btn-edit");
+  const delBtn = ev.target.closest(".btn-delete");
+  if(editBtn){
+    const id = editBtn.dataset.id;
+    const item = members.find(x=>x.id === id);
+    if(!item) return toast("Member not found","error");
+    editingId = id;
+    inputId.value = item.id;
+    inputId.disabled = true;
+    inputName.value = item.name || "";
+    inputPhone.value = item.phone || "";
+    inputRegAmt.value = item.regAmt || "";
+    inputShareAmt.value = item.shareAmt || "";
+    inputTotal.value = item.total || "";
+    inputReceipt.value = item.receipt || "";
+    saveMemberBtn.innerHTML = `<i class="fa fa-save"></i> Update`;
+    window.scrollTo({top:0,behavior:"smooth"});
+    return;
+  }
+  if(delBtn){
+    const id = delBtn.dataset.id;
+    if(!confirm("Delete member "+id+"?")) return;
+    members = members.filter(x=>x.id !== id);
+    saveMembers();
+    renderTable();
+    toast("Member deleted");
+  }
+});
 
-    function deleteRow(index) {
-      if (confirm("እርግጠኛ ነዎት?")) {
-        tableData.splice(index, 1);
-        renderTable();
+/* ============= Search & select all & bulk delete ============= */
+document.getElementById("searchBox").addEventListener("input", (ev)=>{
+  const term = ev.target.value.trim().toLowerCase();
+  if(!term){ renderTable(); return; }
+  const filtered = members.filter(m=>{
+    return (m.id||"").toString().toLowerCase().includes(term) ||
+           (m.name||"").toLowerCase().includes(term) ||
+           (m.phone||"").toLowerCase().includes(term) ||
+           (m.receipt||"").toLowerCase().includes(term);
+  });
+  renderTable(filtered);
+});
+
+document.getElementById("selectAll").addEventListener("change", (ev)=>{
+  const checked = ev.target.checked;
+  document.querySelectorAll(".rowCheckbox").forEach(cb=> cb.checked = checked);
+});
+
+document.getElementById("btnBulkDelete").addEventListener("click", ()=>{
+  const selected = Array.from(document.querySelectorAll(".rowCheckbox:checked")).map(cb=>cb.dataset.id);
+  if(selected.length === 0){ toast("No members selected","error"); return; }
+  if(!confirm(`Delete ${selected.length} selected members?`)) return;
+  members = members.filter(m => !selected.includes(m.id));
+  saveMembers();
+  renderTable();
+  document.getElementById("selectAll").checked = false;
+  toast(`${selected.length} members deleted`);
+});
+
+/* =========== Import Excel (handles 1-row and 2-row headers) =========== */
+const fileInput = document.getElementById("fileInput");
+const btnOpenFile = document.getElementById("btnOpenFile");
+btnOpenFile.addEventListener("click", ()=> fileInput.click());
+
+document.getElementById("btnImport").addEventListener("click", ()=> fileInput.click());
+
+fileInput.addEventListener("change", handleFileSelect);
+
+function handleFileSelect(evt){
+  const file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type:"array"});
+      // read first sheet
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      // get raw rows (arrays)
+      const rows = XLSX.utils.sheet_to_json(sheet, { header:1, defval: "" });
+      if(rows.length === 0) return toast("Excel file is empty","error");
+
+      // Decide header rows (1 or 2)
+      let headerRowCount = 1;
+      const first = rows[0].map(c=> (c||"").toString().trim());
+      const second = rows[1] ? rows[1].map(c=> (c||"").toString().trim()) : null;
+
+      // If second row exists and some second row cells are non-empty where first row cell is "የብር መጠን" or duplicate top cells, use 2-row headers
+      const secondNonEmpty = second && second.some(cell => cell !== "");
+      if(secondNonEmpty){
+        // If second row has labels different from first, treat as subheaders
+        headerRowCount = 2;
       }
-    }
 
-    function exportExcel() {
-      const ws = XLSX.utils.json_to_sheet(tableData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Members");
-      XLSX.writeFile(wb, "members_export.xlsx");
-    }
+      // Build header keys array
+      const headerKeys = [];
+      const maxCols = Math.max(...rows.map(r=>r.length));
+      for(let c=0;c<maxCols;c++){
+        const top = (rows[0][c]||"").toString().trim();
+        const sub = headerRowCount === 2 ? ((rows[1][c]||"").toString().trim()) : "";
+        let key = "";
+        if(top && sub){
+          // combine, e.g. "የብር መጠን - ለመመዝገቢያ"
+          key = `${top} - ${sub}`;
+        } else if(top){
+          key = top;
+        } else if(sub){
+          key = sub;
+        } else {
+          key = `COL_${c+1}`;
+        }
+        headerKeys.push(key);
+      }
 
-    function openSettings() {
-      document.getElementById("settingsBox").classList.toggle("hidden");
-    }
+      // Convert to JSON using headerKeys and skipping headerRowCount rows
+      const dataRows = XLSX.utils.sheet_to_json(sheet, { header: headerKeys, range: headerRowCount, defval: "" });
 
-    function saveSettings() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      localStorage.setItem("adminUser", user);
-      localStorage.setItem("adminPass", pass);
-      alert("✅ ቅንብሮች ተቀመጡ!");
+      // Map columns to our internal fields:
+      // user provided example headers: 
+      // "ተ.ቁ", "ደረሰኝ ቁጥር", "ስም  ዝርዝር", "የብር መጠን - ለመመዝገቢያ", "የብር መጠን - ለሼር", "ድምር", "ስልክ ቁጥር"
+      // We'll try to find best matches by keys (Amharic or english)
+      const mapped = [];
+      for(const r of dataRows){
+        // find values by matching header keys (case-sensitive, but we check for substrings)
+        const getVal = (candidates) => {
+          for(const key of Object.keys(r)){
+            for(const cand of candidates){
+              if(!key) continue;
+              if(key.toString().trim() === cand) return r[key];
+              if(key.toString().includes(cand)) return r[key];
+            }
+          }
+          return "";
+        };
+
+        const id = getVal(["ተ.ቁ","ID","Id","id"]);
+        const receipt = getVal(["ደረሰኝ ቁጥር","Receipt","receipt"]);
+        const name = getVal(["ስም ዝርዝር","ስም","Full Name","Name","name"]);
+        const regAmt = getVal(["የብር መጠን - ለመመዝገቢያ","ለመመዝገቢያ","Reg","registration"]);
+        const shareAmt = getVal(["የብር መጠን - ለሼር","ለሼር","Share","ሼር"]);
+        const total = getVal(["ድምር","Total","total"]);
+        const phone = getVal(["ስልክ ቁጥር","Phone","phone"]);
+
+        mapped.push({
+          id: id?.toString().trim() || (`ID_${Date.now()}_${Math.random().toString(36).slice(2,6)}`),
+          receipt: (receipt||"").toString().trim(),
+          name: (name||"").toString().trim(),
+          regAmt: parseFloat((regAmt||"").toString().replace(/,/g,"")) || 0,
+          shareAmt: parseFloat((shareAmt||"").toString().replace(/,/g,"")) || 0,
+          total: (total !== "" && total !== undefined) ? (parseFloat((total||"").toString().replace(/,/g,"")) || 0) : ( (parseFloat((regAmt||"").toString().replace(/,/g,""))||0) + (parseFloat((shareAmt||"").toString().replace(/,/g,""))||0) ),
+          phone: (phone||"").toString().trim()
+        });
+      }
+
+      // Merge with existing members, avoid duplicates by id
+      let added = 0;
+      for(const m of mapped){
+        if(members.some(x=>x.id === m.id)){
+          // update existing (optional) — here we skip to avoid clobber
+          continue;
+        } else {
+          members.push(m);
+          added++;
+        }
+      }
+      saveMembers();
+      renderTable();
+      toast(`Imported ${mapped.length} rows (${added} new).`);
+    } catch(err){
+      console.error(err);
+      toast("Import failed. Check file format.", "error");
     }
-  </script>
+  };
+  reader.readAsArrayBuffer(file);
+  // reset input so same file can be reselected
+  evt.target.value = "";
+}
+
+/* ============= Export Excel ============= */
+document.getElementById("btnExport").addEventListener("click", ()=>{
+  if(members.length === 0){ toast("No data to export","error"); return; }
+  // produce worksheet using nice headers (keep Amharic keys)
+  const exportRows = members.map(m => ({
+    "ተ.ቁ": m.id,
+    "ስም  ዝርዝር": m.name,
+    "ስልክ ቁጥር": m.phone,
+    "የብር መጠን - ለመመዝገቢያ": m.regAmt,
+    "የብር መጠን - ለሼር": m.shareAmt,
+    "ድምር": m.total,
+    "ደረሰኝ ቁጥር": m.receipt
+  }));
+  const ws = XLSX.utils.json_to_sheet(exportRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Members");
+  XLSX.writeFile(wb, "members_export.xlsx");
+  toast("Exported members_export.xlsx");
+});
+
+/* =========== Settings (change admin credentials) =========== */
+document.getElementById("btnSettings").addEventListener("click", ()=>{
+  showModal(`
+    <h3>Settings</h3>
+    <div style="margin-top:10px">
+      <label>Change Admin Username</label>
+      <input id="setUser" class="form-control" value="${escapeForInput(loadCreds().username)}"/>
+    </div>
+    <div style="margin-top:8px">
+      <label>Change Admin Password</label>
+      <input id="setPass" class="form-control" value="${escapeForInput(loadCreds().password)}" />
+    </div>
+    <div class="form-actions" style="margin-top:12px">
+      <button id="saveSettings" class="btn btn-primary">Save</button>
+      <button id="closeModal" class="btn btn-muted">Cancel</button>
+    </div>
+  `);
+
+  document.getElementById("saveSettings").addEventListener("click", ()=>{
+    const u = document.getElementById("setUser").value.trim();
+    const p = document.getElementById("setPass").value;
+    if(!u || !p){ alert("username & password cannot be empty"); return; }
+    saveCreds({username:u,password:p});
+    toast("Credentials updated");
+    closeModal();
+  });
+});
+
+/* ============ Modal helpers ============ */
+const modalBack = document.getElementById("modalBack");
+const modalContent = document.getElementById("modalContent");
+
+function showModal(html){
+  modalContent.innerHTML = html;
+  modalBack.style.display = "flex";
+}
+function closeModal(){ modalBack.style.display = "none"; modalContent.innerHTML = ""; }
+modalBack.addEventListener("click", (ev)=>{ if(ev.target === modalBack) closeModal(); });
+/* small helper */
+function escapeForInput(s){ return (s||"").replaceAll('"','&quot;'); }
+
+/* ============ Utilities ============ */
+/* On page load, ensure default creds exist (if not set) */
+if(!localStorage.getItem(CRED_KEY)) saveCreds(defaultCreds);
+
+/* Load saved members into table if admin already logged-in previously? We'll wait for login */
+/* Hook add new button */
+document.getElementById("btnAddNew").addEventListener("click", ()=>{
+  resetForm();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+/* open file using choose file */
+document.getElementById("btnOpenFile").addEventListener("click", ()=> fileInput.click());
+
+/* file input already wired */
+
+/* Close modal by close buttons (delegated) */
+modalContent.addEventListener("click",(ev)=>{
+  if(ev.target.id === "closeModal") closeModal();
+});
+
+/* helper to populate if user double-clicks row (optional) */
+tbody.addEventListener("dblclick",(ev)=>{
+  const tr = ev.target.closest("tr");
+  if(!tr) return;
+  const id = tr.querySelector(".rowCheckbox")?.dataset.id;
+  if(!id) return;
+  document.querySelector(`.btn-edit[data-id="${id}"]`)?.click();
+});
+
+/* final: populate login fields with stored credentials for convenience */
+const storedCreds = loadCreds();
+document.getElementById("loginUser").value = storedCreds.username || "";
+document.getElementById("loginPass").value = "";
+
+/* small helper - escape commas in numbers when parsing already covered above */
+
+/* Done */
+</script>
 </body>
 </html>
