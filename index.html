@@ -7,123 +7,309 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: 'Noto Sans Ethiopic', sans-serif;
-      background: #f3f5f9;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
       margin: 0;
       padding: 0;
       color: #222;
+      min-height: 100vh;
     }
 
     header {
-      background: #2c3e50;
+      background: linear-gradient(to right, #2c3e50, #1a2530);
       color: white;
       text-align: center;
-      padding: 1rem 0;
-      font-size: 1.5rem;
+      padding: 1.5rem 1rem;
+      font-size: 1.8rem;
       font-weight: bold;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(to right, #3498db, #2ecc71, #e74c3c);
     }
 
     .stats {
       display: flex;
       justify-content: center;
       gap: 2rem;
-      margin: 1rem auto;
+      margin: 1.5rem auto;
       text-align: center;
       flex-wrap: wrap;
+      max-width: 1200px;
+      padding: 0 1rem;
     }
 
     .stat {
       background: white;
-      border-radius: 10px;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 1.2rem 2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
       font-weight: bold;
+      min-width: 220px;
+      transition: transform 0.3s ease;
+    }
+
+    .stat:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      color: #2c3e50;
+      margin-top: 0.5rem;
     }
 
     .container {
-      width: 90%;
-      max-width: 950px;
-      margin: 1rem auto;
+      width: 95%;
+      max-width: 1200px;
+      margin: 1.5rem auto;
       background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 1.8rem;
+      border-radius: 15px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.08);
     }
 
     .controls {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       flex-wrap: wrap;
-      gap: 0.5rem;
+      gap: 1rem;
+      padding: 0.8rem;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
     }
 
     button {
-      background: #2c3e50;
+      background: linear-gradient(to right, #2c3e50, #34495e);
       color: white;
       border: none;
-      border-radius: 6px;
-      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      padding: 0.7rem 1.2rem;
       cursor: pointer;
-      transition: 0.3s;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
+
     button:hover {
-      background: #34495e;
+      background: linear-gradient(to right, #34495e, #2c3e50);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .btn-export {
+      background: linear-gradient(to right, #27ae60, #2ecc71);
+    }
+
+    .btn-export:hover {
+      background: linear-gradient(to right, #219653, #27ae60);
+    }
+
+    .btn-settings {
+      background: linear-gradient(to right, #8e44ad, #9b59b6);
+    }
+
+    .btn-settings:hover {
+      background: linear-gradient(to right, #7d3c98, #8e44ad);
     }
 
     input[type="file"] {
       display: none;
     }
 
+    .file-label {
+      background: linear-gradient(to right, #2980b9, #3498db);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.7rem 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .file-label:hover {
+      background: linear-gradient(to right, #2471a3, #2980b9);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.95rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-radius: 10px;
+      overflow: hidden;
     }
+
     th, td {
-      border: 1px solid #ddd;
+      border: 1px solid #e1e5eb;
       text-align: left;
-      padding: 0.5rem;
+      padding: 1rem;
       word-break: break-word;
     }
+
     th {
-      background: #ecf0f1;
+      background: linear-gradient(to bottom, #3498db, #2980b9);
+      color: white;
       font-weight: bold;
+      position: sticky;
+      top: 0;
     }
+
     tr:nth-child(even) {
-      background: #fafafa;
+      background: #f8f9fa;
+    }
+
+    tr:hover {
+      background-color: #e3f2fd;
     }
 
     .edit, .delete {
       background: #3498db;
       color: white;
       border: none;
-      padding: 0.3rem 0.6rem;
+      padding: 0.4rem 0.8rem;
       border-radius: 5px;
       cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
     }
+
+    .edit:hover {
+      background: #2980b9;
+    }
+
     .delete {
       background: #e74c3c;
     }
 
+    .delete:hover {
+      background: #c0392b;
+    }
+
     .settings {
-      text-align: right;
-      margin-top: 1rem;
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin-top: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .settings h3 {
+      margin-bottom: 1.2rem;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .settings label {
+      display: block;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .settings input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      margin-top: 0.3rem;
+      font-family: 'Noto Sans Ethiopic', sans-serif;
+    }
+
+    .settings button {
+      margin-top: 0.5rem;
     }
 
     .hidden {
       display: none;
     }
 
-    @media (max-width: 600px) {
+    .footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
       .controls {
         flex-direction: column;
+        align-items: stretch;
       }
+      
+      .control-group {
+        justify-content: center;
+      }
+      
+      .stats {
+        flex-direction: column;
+        align-items: center;
+      }
+      
       .stat {
         width: 100%;
+        max-width: 300px;
+      }
+      
+      th, td {
+        padding: 0.7rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header {
+        font-size: 1.4rem;
+        padding: 1.2rem 0.8rem;
+      }
+      
+      .container {
+        padding: 1.2rem;
+      }
+      
+      button, .file-label {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
       }
     }
   </style>
@@ -132,19 +318,35 @@
   <header>የአባላት ቁጠባ አስተዳደር</header>
 
   <div class="stats">
-    <div class="stat" id="memberCount">የአባላት ጠቅላላ ብዛት: 0</div>
-    <div class="stat" id="totalMoney">ጠቅላላ የብር መጠን: 0 ብር</div>
+    <div class="stat">
+      <div>የአባላት ጠቅላላ ብዛት</div>
+      <div class="stat-value" id="memberCount">0</div>
+    </div>
+    <div class="stat">
+      <div>ጠቅላላ የብር መጠን</div>
+      <div class="stat-value" id="totalMoney">0 ብር</div>
+    </div>
   </div>
 
   <div class="container">
     <div class="controls">
-      <label for="excelFile" class="btn">
-        <button>📂 Excel አስመጣ</button>
-      </label>
-      <input type="file" id="excelFile" accept=".xlsx, .xls" />
-      <button onclick="addRow()">➕ አባል አክል</button>
-      <button onclick="exportExcel()">📤 Excel ወደ ውጭ አውጣ</button>
-      <button onclick="openSettings()">⚙️ ቅንብሮች</button>
+      <div class="control-group">
+        <label for="excelFile" class="file-label">
+          <span>📂 Excel አስመጣ</span>
+        </label>
+        <input type="file" id="excelFile" accept=".xlsx, .xls" />
+        <button onclick="addRow()">
+          <span>➕ አባል አክል</span>
+        </button>
+      </div>
+      <div class="control-group">
+        <button onclick="exportExcel()" class="btn-export">
+          <span>📤 Excel ወደ ውጭ አውጣ</span>
+        </button>
+        <button onclick="openSettings()" class="btn-settings">
+          <span>⚙️ ቅንብሮች</span>
+        </button>
+      </div>
     </div>
 
     <table id="memberTable">
@@ -156,10 +358,18 @@
 
     <div class="settings hidden" id="settingsBox">
       <h3>⚙️ የአድሚን ቅንብሮች</h3>
-      <label>የተጠቃሚ ስም: <input id="username" placeholder="username"></label><br><br>
-      <label>የይለፍ ቃል: <input id="password" type="password" placeholder="password"></label><br><br>
+      <label>የተጠቃሚ ስም: 
+        <input id="username" placeholder="username">
+      </label>
+      <label>የይለፍ ቃል: 
+        <input id="password" type="password" placeholder="password">
+      </label>
       <button onclick="saveSettings()">💾 አስቀምጥ</button>
     </div>
+  </div>
+
+  <div class="footer">
+    <p>የአባላት ቁጠባ አስተዳደር ስርዓት © 2023</p>
   </div>
 
   <script>
@@ -171,38 +381,68 @@
     function handleFile(e) {
       const file = e.target.files[0];
       if (!file) return;
+      
       const reader = new FileReader();
       reader.onload = function(evt) {
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array', codepage: 65001 });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-        // Merge double headers
-        if (json.length > 1) {
-          const header1 = json[0];
-          const header2 = json[1];
-          headers = header1.map((h, i) => {
-            const sub = header2[i] ? header2[i].trim() : "";
-            if (sub && sub !== "") return `${h.trim()} - ${sub}`;
-            return h.trim();
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          
+          // Get the range of the sheet
+          const range = XLSX.utils.decode_range(sheet['!ref']);
+          
+          // Extract headers (first row)
+          headers = [];
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const address = XLSX.utils.encode_cell({r: range.s.r, c: C});
+            const cell = sheet[address];
+            let header = cell ? cell.v : "";
+            
+            // Clean header names
+            if (typeof header === 'string') {
+              header = header.trim();
+            } else if (typeof header === 'number') {
+              header = header.toString();
+            } else {
+              header = "";
+            }
+            
+            // Remove any ID-like prefixes
+            header = header.replace(/^ID_\d+_/, '');
+            
+            headers.push(header || `Column ${C + 1}`);
+          }
+          
+          // Extract data (rows after header)
+          const jsonData = XLSX.utils.sheet_to_json(sheet, { 
+            header: 1,
+            range: {s: {r: range.s.r + 1, c: range.s.c}, e: range.e}
           });
-          json = json.slice(2);
-        } else {
-          headers = json[0];
-          json = json.slice(1);
+          
+          // Process data rows
+          tableData = jsonData.map(row => {
+            const obj = {};
+            headers.forEach((h, i) => {
+              let value = row[i];
+              // Handle different data types
+              if (value === null || value === undefined) {
+                value = "";
+              } else if (typeof value === 'object') {
+                value = JSON.stringify(value);
+              } else {
+                value = value.toString();
+              }
+              obj[h] = value;
+            });
+            return obj;
+          });
+          
+          renderTable();
+        } catch (error) {
+          console.error("Error processing Excel file:", error);
+          alert("Excel ፋይልን መቀየር አልተሳካም። እባክዎን ትክክለኛውን ፋይል ይምረጡ።");
         }
-
-        // Filter invalid headers
-        headers = headers.filter(h => h && !/^col_\d+$/i.test(h));
-
-        tableData = json.map(row => {
-          const obj = {};
-          headers.forEach((h, i) => obj[h] = row[i] || "");
-          return obj;
-        });
-
-        renderTable();
       };
       reader.readAsArrayBuffer(file);
     }
@@ -213,26 +453,30 @@
       thead.innerHTML = "";
       tbody.innerHTML = "";
 
+      // Create header row
       headers.forEach(h => {
         const th = document.createElement("th");
         th.textContent = h;
         thead.appendChild(th);
       });
+      
       const thAction = document.createElement("th");
       thAction.textContent = "እርምጃ";
       thead.appendChild(thAction);
 
+      // Create data rows
       tableData.forEach((row, idx) => {
         const tr = document.createElement("tr");
         headers.forEach(h => {
           const td = document.createElement("td");
-          td.textContent = row[h];
+          td.textContent = row[h] || "";
           tr.appendChild(td);
         });
+        
         const tdAction = document.createElement("td");
         tdAction.innerHTML = `
-          <button class="edit" onclick="editRow(${idx})">Edit</button>
-          <button class="delete" onclick="deleteRow(${idx})">Del</button>`;
+          <button class="edit" onclick="editRow(${idx})">አርትዕ</button>
+          <button class="delete" onclick="deleteRow(${idx})">ሰርዝ</button>`;
         tr.appendChild(tdAction);
         tbody.appendChild(tr);
       });
@@ -241,13 +485,28 @@
     }
 
     function updateStats() {
-      document.getElementById("memberCount").textContent = "የአባላት ጠቅላላ ብዛት: " + tableData.length;
+      document.getElementById("memberCount").textContent = tableData.length;
+      
       let total = 0;
       tableData.forEach(r => {
-        const val = parseFloat(r["ድምር"]);
-        if (!isNaN(val)) total += val;
+        // Try to find a column that might contain monetary values
+        const moneyColumns = ["ድምር", "መጠን", "ብር", "ጠቅላላ", "Amount", "Total"];
+        let moneyValue = 0;
+        
+        for (const col of moneyColumns) {
+          if (r[col] !== undefined) {
+            const val = parseFloat(r[col].toString().replace(/[^0-9.]/g, ''));
+            if (!isNaN(val)) {
+              moneyValue = val;
+              break;
+            }
+          }
+        }
+        
+        total += moneyValue;
       });
-      document.getElementById("totalMoney").textContent = "ጠቅላላ የብር መጠን: " + total.toLocaleString() + " ብር";
+      
+      document.getElementById("totalMoney").textContent = total.toLocaleString() + " ብር";
     }
 
     function addRow() {
@@ -267,13 +526,18 @@
     }
 
     function deleteRow(index) {
-      if (confirm("እርግጠኛ ነዎት?")) {
+      if (confirm("እርግጠኛ ነዎት ይህን አባል መሰረዝ ይፈልጋሉ?")) {
         tableData.splice(index, 1);
         renderTable();
       }
     }
 
     function exportExcel() {
+      if (tableData.length === 0) {
+        alert("መላክ ያለባቸው ውሂብ የለም።");
+        return;
+      }
+      
       const ws = XLSX.utils.json_to_sheet(tableData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Members");
@@ -287,10 +551,31 @@
     function saveSettings() {
       const user = document.getElementById("username").value;
       const pass = document.getElementById("password").value;
+      
+      if (!user || !pass) {
+        alert("እባክዎን ሁሉንም መስኮች ይሙሉ");
+        return;
+      }
+      
       localStorage.setItem("adminUser", user);
       localStorage.setItem("adminPass", pass);
       alert("✅ ቅንብሮች ተቀመጡ!");
     }
+
+    // Initialize with sample data
+    window.onload = function() {
+      // Sample headers in Amharic
+      headers = ["የአባል ስም", "አድራሻ", "ስልክ ቁጥር", "የብር መጠን", "የመጨረሻ ክፍያ"];
+      
+      // Sample data
+      tableData = [
+        {"የአባል ስም": "አበበ ተሰፋ", "አድራሻ": "አዲስ አበባ", "ስልክ ቁጥር": "0911123456", "የብር መጠን": "5000", "የመጨረሻ ክፍያ": "2023-10-15"},
+        {"የአባል ስም": "ችርችን ወልደ", "አድራሻ": "ዳር ከተማ", "ስልክ ቁጥር": "0922123456", "የብር መጠን": "7500", "የመጨረሻ ክፍያ": "2023-10-10"},
+        {"የአባል ስም": "መለሰ አለም", "አድራሻ": "ባህር ዳር", "ስልክ ቁጥር": "0933123456", "የብር መጠን": "3000", "የመጨረሻ ክፍያ": "2023-10-20"}
+      ];
+      
+      renderTable();
+    };
   </script>
 </body>
 </html>
